@@ -24,11 +24,22 @@ export async function middleware(req: NextRequest) {
     }
 
     // Check if user has an active admin profile
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('admin_profiles')
       .select('is_active, role')
       .eq('id', session.user.id)
       .single()
+
+    console.log('Middleware - Profile check:', { profile, profileError, userId: session.user.id })
+
+    if (profileError) {
+      console.error('Middleware - Profile fetch error:', profileError)
+      // If there's an error fetching profile, redirect to login
+      const redirectUrl = req.nextUrl.clone()
+      redirectUrl.pathname = '/admin/login'
+      redirectUrl.searchParams.set('error', 'profile_error')
+      return NextResponse.redirect(redirectUrl)
+    }
 
     if (!profile || !profile.is_active) {
       // User exists in auth but no admin profile or inactive
