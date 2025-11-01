@@ -157,12 +157,17 @@ export async function signIn(email: string, password: string) {
 
   if (error) throw error
 
-  // Update last login
+  // Update last login (silently fail if RLS prevents it)
   if (data.user) {
-    await supabase
-      .from('admin_profiles')
-      .update({ last_login: new Date().toISOString() })
-      .eq('id', data.user.id)
+    try {
+      await supabase
+        .from('admin_profiles')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', data.user.id)
+    } catch (updateError) {
+      // Silently ignore last_login update errors
+      console.log('Could not update last_login:', updateError)
+    }
   }
 
   return data
