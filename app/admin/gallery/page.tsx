@@ -20,8 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Trash2, Eye, EyeOff, GripVertical } from "lucide-react"
+import { Plus, Trash2, Eye, EyeOff, GripVertical, Star } from "lucide-react"
 import Image from "next/image"
+import { toast } from "sonner"
 
 interface GalleryImage {
   id: string
@@ -30,6 +31,7 @@ interface GalleryImage {
   category: string
   display_order: number
   is_active: boolean
+  show_in_hero: boolean
   created_at: string
 }
 
@@ -44,6 +46,8 @@ export default function GalleryPage() {
     caption: '',
     category: 'general',
   })
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string>('')
 
   useEffect(() => {
     loadImages()
@@ -77,9 +81,26 @@ export default function GalleryPage() {
     }
   }
 
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setUploadedFile(file)
+
+      // Create preview URL
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const result = reader.result as string
+        setPreviewUrl(result)
+        setNewImage({ ...newImage, image_url: result })
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   async function addImage() {
     if (!newImage.image_url) {
-      alert('Please enter an image URL')
+      toast.error('Please enter an image URL')
       return
     }
 
@@ -109,10 +130,13 @@ export default function GalleryPage() {
         caption: '',
         category: 'general',
       })
+      setUploadedFile(null)
+      setPreviewUrl('')
       setDialogOpen(false)
+      toast.success('Image added successfully!')
     } catch (error) {
       console.error('Error adding image:', error)
-      alert('Failed to add image. Please try again.')
+      toast.error('Failed to add image. Please try again.')
     }
   }
 
@@ -128,9 +152,10 @@ export default function GalleryPage() {
       if (error) throw error
 
       setImages(prev => prev.filter(img => img.id !== id))
+      toast.success('Image deleted successfully!')
     } catch (error) {
       console.error('Error deleting image:', error)
-      alert('Failed to delete image. Please try again.')
+      toast.error('Failed to delete image. Please try again.')
     }
   }
 
@@ -148,6 +173,25 @@ export default function GalleryPage() {
       )
     } catch (error) {
       console.error('Error toggling active status:', error)
+    }
+  }
+
+  async function toggleHero(id: string, currentStatus: boolean) {
+    try {
+      const { error } = await supabase
+        .from('gallery_images')
+        .update({ show_in_hero: !currentStatus })
+        .eq('id', id)
+
+      if (error) throw error
+
+      setImages(prev =>
+        prev.map(img => img.id === id ? { ...img, show_in_hero: !currentStatus } : img)
+      )
+      toast.success(!currentStatus ? 'Added to hero section!' : 'Removed from hero section')
+    } catch (error) {
+      console.error('Error toggling hero status:', error)
+      toast.error('Failed to update hero status')
     }
   }
 
@@ -195,7 +239,7 @@ export default function GalleryPage() {
 
           <Button
             onClick={() => setDialogOpen(true)}
-            className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-white hover:opacity-90"
+            className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-black hover:opacity-90"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Image
@@ -235,6 +279,15 @@ export default function GalleryPage() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => toggleHero(image.id, image.show_in_hero)}
+                        className={`${image.show_in_hero ? 'bg-yellow-500/30 hover:bg-yellow-500/40' : 'bg-white/20 hover:bg-white/30'} text-white`}
+                        title={image.show_in_hero ? "Remove from hero" : "Add to hero"}
+                      >
+                        <Star className={`h-4 w-4 ${image.show_in_hero ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => toggleActive(image.id, image.is_active)}
                         className="bg-white/20 hover:bg-white/30 text-white"
                       >
@@ -250,12 +303,20 @@ export default function GalleryPage() {
                       </Button>
                     </div>
 
-                    {/* Status Badge */}
-                    {!image.is_active && (
-                      <div className="absolute top-2 right-2 bg-gray-800/90 text-gray-300 px-2 py-1 rounded text-xs">
-                        Hidden
-                      </div>
-                    )}
+                    {/* Status Badges */}
+                    <div className="absolute top-2 right-2 flex gap-2">
+                      {image.show_in_hero && (
+                        <div className="bg-yellow-500/90 text-white px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
+                          <Star className="h-3 w-3 fill-white" />
+                          Hero
+                        </div>
+                      )}
+                      {!image.is_active && (
+                        <div className="bg-gray-800/90 text-gray-300 px-2 py-1 rounded text-xs">
+                          Hidden
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Details */}
@@ -290,6 +351,21 @@ export default function GalleryPage() {
             </DialogHeader>
 
             <div className="space-y-4 mt-4">
+              {/* File Upload Option */}
+              <div className="space-y-2">
+                <Label htmlFor="file_upload" className="text-gray-300">
+                  Upload Image File
+                </Label>
+                <Input
+                  id="file_upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="bg-gray-800 border-gray-700 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-[#FF3F02] file:to-[#FEBE03] file:text-white hover:file:opacity-90 cursor-pointer"
+                />
+                <p className="text-xs text-gray-500">Or enter a URL below</p>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="image_url" className="text-gray-300">
                   Image URL
@@ -299,8 +375,12 @@ export default function GalleryPage() {
                   placeholder="https://example.com/image.jpg or /local-image.jpg"
                   value={newImage.image_url}
                   onChange={(e) => setNewImage({ ...newImage, image_url: e.target.value })}
-                  className="bg-gray-800 border-gray-700 text-white"
+                  className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
+                  disabled={!!uploadedFile}
                 />
+                {uploadedFile && (
+                  <p className="text-xs text-green-400">File uploaded: {uploadedFile.name}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -312,7 +392,7 @@ export default function GalleryPage() {
                   placeholder="Beautiful sunset at Tarkwa Bay"
                   value={newImage.caption}
                   onChange={(e) => setNewImage({ ...newImage, caption: e.target.value })}
-                  className="bg-gray-800 border-gray-700 text-white"
+                  className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
                 />
               </div>
 
@@ -365,7 +445,7 @@ export default function GalleryPage() {
                 </Button>
                 <Button
                   onClick={addImage}
-                  className="flex-1 bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-white hover:opacity-90"
+                  className="flex-1 bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-black hover:opacity-90"
                 >
                   Add Image
                 </Button>

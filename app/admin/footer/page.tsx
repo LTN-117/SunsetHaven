@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Save, Mail, Phone, MapPin, Instagram, Info, Calendar, Truck } from "lucide-react"
+import { toast } from "sonner"
 
 interface FooterSettings {
   id: string
@@ -77,10 +78,10 @@ export default function FooterSettingsPage() {
       if (error) throw error
 
       setLastSaved(new Date())
-      alert('Footer settings saved successfully!')
+      toast.success('Footer settings saved successfully!')
     } catch (error) {
       console.error('Error saving footer settings:', error)
-      alert('Failed to save settings. Please try again.')
+      toast.error('Failed to save settings. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -316,7 +317,7 @@ export default function FooterSettingsPage() {
               <Button
                 onClick={saveSettings}
                 disabled={saving}
-                className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-white hover:opacity-90 px-8"
+                className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-black hover:opacity-90 px-8"
               >
                 {saving ? (
                   <>

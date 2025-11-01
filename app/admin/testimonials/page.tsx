@@ -22,6 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Plus, Trash2, Eye, EyeOff, Edit, Quote } from "lucide-react"
+import { toast } from "sonner"
 
 interface Testimonial {
   id: string
@@ -85,7 +86,7 @@ export default function TestimonialsPage() {
 
   async function saveTestimonial() {
     if (!formData.guest_name || !formData.quote) {
-      alert('Please fill in name and quote')
+      toast.error('Please fill in name and quote')
       return
     }
 
@@ -137,7 +138,7 @@ export default function TestimonialsPage() {
       setFormData({ guest_name: '', quote: '', guest_role: '' })
     } catch (error) {
       console.error('Error saving testimonial:', error)
-      alert('Failed to save testimonial. Please try again.')
+      toast.error('Failed to save testimonial. Please try again.')
     }
   }
 
@@ -155,7 +156,7 @@ export default function TestimonialsPage() {
       setTestimonials(prev => prev.filter(t => t.id !== id))
     } catch (error) {
       console.error('Error deleting testimonial:', error)
-      alert('Failed to delete testimonial. Please try again.')
+      toast.error('Failed to delete testimonial. Please try again.')
     }
   }
 
@@ -205,7 +206,7 @@ export default function TestimonialsPage() {
         <div className="flex justify-end">
           <Button
             onClick={() => openDialog()}
-            className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-white hover:opacity-90"
+            className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-black hover:opacity-90"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Testimonial
@@ -371,7 +372,7 @@ export default function TestimonialsPage() {
                 </Button>
                 <Button
                   onClick={saveTestimonial}
-                  className="flex-1 bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-white hover:opacity-90"
+                  className="flex-1 bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-black hover:opacity-90"
                 >
                   {editingId ? 'Update' : 'Add'} Testimonial
                 </Button>

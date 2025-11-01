@@ -6,17 +6,132 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { supabase } from "@/lib/supabase"
 
 export default function SunsetHavenResort() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [heroImageSlide, setHeroImageSlide] = useState(0)
   const [testimonialSlide, setTestimonialSlide] = useState(0)
 
-  const heroImages = [
+  // Contact form state
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    inquiry_type: "",
+    message: ""
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle")
+
+  // Gallery auto-scroll state
+  const [galleryScrollPosition, setGalleryScrollPosition] = useState(0)
+  const [isGalleryHovered, setIsGalleryHovered] = useState(false)
+  const galleryContainerRef = useRef<HTMLDivElement>(null)
+
+  // Footer settings state
+  const [footerSettings, setFooterSettings] = useState<any>(null)
+
+  // Hero images from database
+  const [heroImages, setHeroImages] = useState<string[]>([
     "/IMG_8277.JPG",
     "/IMG_8282.JPG",
     "/IMG_8285.JPG"
-  ]
+  ])
+
+  // Gallery images for "Moments That Matter"
+  const [galleryImages, setGalleryImages] = useState<any[]>([])
+
+  // Events state
+  const [events, setEvents] = useState<any[]>([])
+  const [eventSlide, setEventSlide] = useState(0)
+  const [newsletterEmail, setNewsletterEmail] = useState("")
+  const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "success" | "error">("idle")
+
+  // Load hero images from database
+  useEffect(() => {
+    const loadHeroImages = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('gallery_images')
+          .select('image_url')
+          .eq('show_in_hero', true)
+          .eq('is_active', true)
+          .order('display_order', { ascending: true })
+
+        if (error) throw error
+        if (data && data.length > 0) {
+          setHeroImages(data.map(img => img.image_url))
+        }
+      } catch (error) {
+        console.error('Error loading hero images:', error)
+      }
+    }
+
+    loadHeroImages()
+  }, [])
+
+  // Load gallery images from database
+  useEffect(() => {
+    const loadGalleryImages = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('gallery_images')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order', { ascending: true })
+          .limit(12)
+
+        if (error) throw error
+        setGalleryImages(data || [])
+      } catch (error) {
+        console.error('Error loading gallery images:', error)
+      }
+    }
+
+    loadGalleryImages()
+  }, [])
+
+  // Load footer settings from database
+  useEffect(() => {
+    const loadFooterSettings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('footer_settings')
+          .select('*')
+          .single()
+
+        if (error) throw error
+        setFooterSettings(data)
+      } catch (error) {
+        console.error('Error loading footer settings:', error)
+      }
+    }
+
+    loadFooterSettings()
+  }, [])
+
+  // Load upcoming events from database
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        const today = new Date().toISOString().split('T')[0]
+        const { data, error } = await supabase
+          .from('events')
+          .select('*')
+          .eq('is_active', true)
+          .gte('event_date', today)
+          .order('event_date', { ascending: true })
+          .limit(5)
+
+        if (error) throw error
+        setEvents(data || [])
+      } catch (error) {
+        console.error('Error loading events:', error)
+      }
+    }
+
+    loadEvents()
+  }, [])
 
   useEffect(() => {
     const heroInterval = setInterval(() => {
@@ -62,6 +177,148 @@ export default function SunsetHavenResort() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Gallery auto-scroll effect
+  useEffect(() => {
+    const galleryInterval = setInterval(() => {
+      if (!isGalleryHovered && galleryContainerRef.current) {
+        const container = galleryContainerRef.current
+        const scrollAmount = 1 // Slow scroll speed
+
+        if (container.scrollLeft >= container.scrollWidth - container.clientWidth - 10) {
+          // Reset to start when reaching end
+          container.scrollLeft = 0
+        } else {
+          container.scrollLeft += scrollAmount
+        }
+      }
+    }, 30) // Run every 30ms for smooth scrolling
+
+    // Start scrolling after 1.5s delay
+    const startDelay = setTimeout(() => {
+      return galleryInterval
+    }, 1500)
+
+    return () => {
+      clearInterval(galleryInterval)
+      clearTimeout(startDelay)
+    }
+  }, [isGalleryHovered])
+
+  // Handle contact form submission
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Validate form
+    if (!formData.name || !formData.phone || !formData.inquiry_type || !formData.message) {
+      setSubmitStatus("error")
+      setTimeout(() => setSubmitStatus("idle"), 3000)
+      return
+    }
+
+    setIsSubmitting(true)
+    setSubmitStatus("idle")
+
+    try {
+      const { error } = await supabase
+        .from("inquiries")
+        .insert([
+          {
+            name: formData.name,
+            phone: formData.phone,
+            inquiry_type: formData.inquiry_type,
+            message: formData.message,
+            status: "new"
+          }
+        ])
+
+      if (error) throw error
+
+      // Success - reset form and show success message
+      setFormData({ name: "", phone: "", inquiry_type: "", message: "" })
+      setSubmitStatus("success")
+      setTimeout(() => setSubmitStatus("idle"), 5000)
+    } catch (error) {
+      console.error("Error submitting form:", error)
+      setSubmitStatus("error")
+      setTimeout(() => setSubmitStatus("idle"), 5000)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Handle newsletter signup
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!newsletterEmail || !newsletterEmail.includes('@')) {
+      setNewsletterStatus("error")
+      setTimeout(() => setNewsletterStatus("idle"), 5000)
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from("event_newsletter_signups")
+        .insert([{ email: newsletterEmail }])
+
+      if (error) {
+        // Check if email already exists
+        if (error.code === '23505') {
+          setNewsletterStatus("error")
+          setTimeout(() => setNewsletterStatus("idle"), 5000)
+          return
+        }
+        throw error
+      }
+
+      setNewsletterEmail("")
+      setNewsletterStatus("success")
+      setTimeout(() => setNewsletterStatus("idle"), 5000)
+    } catch (error) {
+      console.error("Error subscribing to newsletter:", error)
+      setNewsletterStatus("error")
+      setTimeout(() => setNewsletterStatus("idle"), 5000)
+    }
+  }
+
+  const formatEventDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+    }).format(amount)
+  }
+
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat('en-NG').format(num)
+  }
+
+  const handleLearnMore = (experienceType: string) => {
+    // Map experience titles to inquiry types (using the same values as SelectItem)
+    const inquiryTypeMap: { [key: string]: string } = {
+      'Premium Camping': 'Premium Camping',
+      'Adventure Activities': 'Adventure Activities',
+      'Curated Networking': 'Curated Networking',
+      'Bespoke Events': 'Bespoke Events'
+    }
+
+    const inquiryType = inquiryTypeMap[experienceType]
+    if (inquiryType) {
+      setFormData({ ...formData, inquiry_type: inquiryType })
+    }
+
+    // Scroll to contact form
+    document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
   const experiences = [
     {
       title: "Premium Camping",
@@ -103,7 +360,13 @@ export default function SunsetHavenResort() {
   ]
 
   return (
-    <div className="min-h-screen relative" style={{ background: '#0a0a0a' }}>
+    <div className="min-h-screen relative" style={{
+      background: '#0a0a0a',
+      backgroundImage: 'linear-gradient(rgba(10, 10, 10, 0.85), rgba(10, 10, 10, 0.85)), url(/IMG_8277.JPG)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed'
+    }}>
       <nav className="fixed top-0 w-full z-50 text-white backdrop-blur-sm rounded-b-3xl" style={{ background: 'linear-gradient(135deg, rgba(254, 190, 3, 0.95) 0%, rgba(255, 63, 2, 0.95) 100%)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -172,10 +435,13 @@ export default function SunsetHavenResort() {
               </p>
               <Button
                 size="lg"
+                onClick={() => {
+                  document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
+                }}
                 className="text-white px-8 py-3 text-lg rounded-full hover:opacity-90 hover:scale-105 transition-all duration-300"
                 style={{ background: 'linear-gradient(135deg, #FF3F02 0%, #FEBE03 100%)' }}
               >
-                Book Your Experience
+                Book Your Experience - Get Quote
               </Button>
             </div>
 
@@ -232,6 +498,239 @@ export default function SunsetHavenResort() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Upcoming Events Section */}
+      <section className="scroll-section neon-border py-20 rounded-3xl" style={{
+        '--section-bg': 'linear-gradient(135deg, rgba(15, 15, 25, 0.95) 0%, rgba(10, 10, 15, 0.95) 100%)',
+        background: 'linear-gradient(135deg, rgba(15, 15, 25, 0.95) 0%, rgba(10, 10, 15, 0.95) 100%)',
+        position: 'relative'
+      } as React.CSSProperties}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold mb-2 text-gray-500">What's Happening</p>
+            <h2 className="text-5xl md:text-6xl font-bold mb-4 text-white">Upcoming Events</h2>
+            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+              From sunset parties to cultural celebrations, join us for unforgettable experiences on the island.
+            </p>
+          </div>
+
+          {events.length === 0 ? (
+            /* No Events - Email Capture */
+            <div className="max-w-2xl mx-auto rounded-3xl overflow-hidden border border-gray-800 p-8 md:p-12 text-center" style={{
+              background: 'rgba(20, 20, 30, 0.6)',
+              backdropFilter: 'blur(10px)'
+            }}>
+              <div className="mb-6">
+                <svg className="w-20 h-20 mx-auto text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-3">No Upcoming Events Yet</h3>
+              <p className="text-gray-400 mb-8">
+                Be the first to know when we announce our next event! Sign up for our newsletter and get exclusive early-bird access.
+              </p>
+
+              <form onSubmit={handleNewsletterSubmit} className="max-w-md mx-auto">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    className="flex-1 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
+                    required
+                  />
+                  <Button
+                    type="submit"
+                    className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-white hover:opacity-90 px-8"
+                  >
+                    Notify Me
+                  </Button>
+                </div>
+
+                {newsletterStatus === "success" && (
+                  <p className="mt-4 text-green-400 text-sm">
+                    Thank you! We'll notify you when new events are announced.
+                  </p>
+                )}
+                {newsletterStatus === "error" && (
+                  <p className="mt-4 text-red-400 text-sm">
+                    Please enter a valid email address.
+                  </p>
+                )}
+              </form>
+            </div>
+          ) : events.length === 1 ? (
+            /* Single Event - Large Card */
+            <div className="max-w-4xl mx-auto rounded-3xl overflow-hidden border border-gray-800 hover:border-gray-700 transition-all" style={{
+              background: 'rgba(20, 20, 30, 0.6)',
+              backdropFilter: 'blur(10px)'
+            }}>
+              <div className="grid md:grid-cols-2 gap-0">
+                {/* Event Flier */}
+                <div className="relative h-96 md:h-auto">
+                  <img
+                    src={events[0].flier_url}
+                    alt={events[0].title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                {/* Event Details */}
+                <div className="p-8 md:p-10 flex flex-col justify-between">
+                  <div>
+                    <div className="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-4"
+                      style={{ background: 'linear-gradient(135deg, #FF3F02 0%, #FEBE03 100%)' }}>
+                      Upcoming Event
+                    </div>
+                    <h3 className="text-3xl font-bold text-white mb-4">{events[0].title}</h3>
+                    <p className="text-gray-300 mb-6 leading-relaxed">{events[0].description}</p>
+
+                    <div className="space-y-3 mb-6">
+                      <div className="flex items-center gap-3 text-gray-400">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-white">{formatEventDate(events[0].event_date)}</span>
+                      </div>
+
+                      {/* Pricing Tiers */}
+                      {events[0].pricing_tiers && events[0].pricing_tiers.length > 0 ? (
+                        <div className="space-y-2">
+                          <p className="text-gray-400 text-sm font-semibold">Pricing:</p>
+                          {events[0].pricing_tiers.map((tier: any, idx: number) => (
+                            <div key={idx} className="flex items-center justify-between bg-gray-800/30 px-3 py-2 rounded-lg">
+                              <span className="text-white text-sm">{tier.label}</span>
+                              <span className="text-white font-semibold">{formatCurrency(parseFloat(tier.price))}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3 text-gray-400">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="text-white font-semibold">From {formatCurrency(events[0].cost)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <a
+                    href={events[0].paystack_payment_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block text-center px-8 py-4 rounded-full text-white font-semibold hover:opacity-90 transition-opacity"
+                    style={{ background: 'linear-gradient(135deg, #FF3F02 0%, #FEBE03 100%)' }}
+                  >
+                    Get Tickets
+                  </a>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Multiple Events - Carousel */
+            <div className="relative max-w-4xl mx-auto">
+              <div className="rounded-3xl overflow-hidden border border-gray-800" style={{
+                background: 'rgba(20, 20, 30, 0.6)',
+                backdropFilter: 'blur(10px)'
+              }}>
+                <div className="grid md:grid-cols-2 gap-0">
+                  {/* Event Flier */}
+                  <div className="relative h-96 md:h-auto">
+                    <img
+                      src={events[eventSlide].flier_url}
+                      alt={events[eventSlide].title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  {/* Event Details */}
+                  <div className="p-8 md:p-10 flex flex-col justify-between">
+                    <div>
+                      <div className="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-4"
+                        style={{ background: 'linear-gradient(135deg, #FF3F02 0%, #FEBE03 100%)' }}>
+                        Event {eventSlide + 1} of {events.length}
+                      </div>
+                      <h3 className="text-3xl font-bold text-white mb-4">{events[eventSlide].title}</h3>
+                      <p className="text-gray-300 mb-6 leading-relaxed line-clamp-4">{events[eventSlide].description}</p>
+
+                      <div className="space-y-3 mb-6">
+                        <div className="flex items-center gap-3 text-gray-400">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-white">{formatEventDate(events[eventSlide].event_date)}</span>
+                        </div>
+
+                        {/* Pricing Tiers */}
+                        {events[eventSlide].pricing_tiers && events[eventSlide].pricing_tiers.length > 0 ? (
+                          <div className="space-y-2">
+                            <p className="text-gray-400 text-sm font-semibold">Pricing:</p>
+                            {events[eventSlide].pricing_tiers.map((tier: any, idx: number) => (
+                              <div key={idx} className="flex items-center justify-between bg-gray-800/30 px-3 py-2 rounded-lg">
+                                <span className="text-white text-sm">{tier.label}</span>
+                                <span className="text-white font-semibold">{formatCurrency(parseFloat(tier.price))}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3 text-gray-400">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-white font-semibold">From {formatCurrency(events[eventSlide].cost)}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <a
+                      href={events[eventSlide].paystack_payment_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block text-center px-8 py-4 rounded-full text-white font-semibold hover:opacity-90 transition-opacity"
+                      style={{ background: 'linear-gradient(135deg, #FF3F02 0%, #FEBE03 100%)' }}
+                    >
+                      Get Tickets
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Carousel Controls */}
+              <div className="flex items-center justify-center gap-4 mt-6">
+                <button
+                  onClick={() => setEventSlide((eventSlide - 1 + events.length) % events.length)}
+                  className="p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-white transition-colors"
+                  aria-label="Previous event"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                <div className="flex gap-2">
+                  {events.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setEventSlide(index)}
+                      className={`w-2 h-2 rounded-full transition-all ${index === eventSlide ? 'w-8 bg-gradient-to-r from-[#FF3F02] to-[#FEBE03]' : 'bg-gray-600 hover:bg-gray-500'}`}
+                      aria-label={`Go to event ${index + 1}`}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setEventSlide((eventSlide + 1) % events.length)}
+                  className="p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-white transition-colors"
+                  aria-label="Next event"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -399,7 +898,15 @@ export default function SunsetHavenResort() {
                     className={`p-8 md:p-12 flex flex-col justify-center ${index % 2 === 1 ? "md:order-1" : "md:order-2"}`}
                   >
                     <h3 className="text-3xl md:text-4xl font-bold mb-4 text-white">{experience.title}</h3>
-                    <p className="text-lg leading-relaxed text-gray-300">{experience.description}</p>
+                    <p className="text-lg leading-relaxed text-gray-300 mb-6">{experience.description}</p>
+                    <div>
+                      <Button
+                        onClick={() => handleLearnMore(experience.title)}
+                        className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-white hover:opacity-90"
+                      >
+                        Learn More
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -422,63 +929,152 @@ export default function SunsetHavenResort() {
             </p>
           </div>
 
-          {/* Photo Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div className="col-span-2 row-span-2">
-              <img
-                src="/IMG_8052.jpg"
-                alt="Camping event"
-                className="w-full h-full object-cover rounded-3xl"
-              />
+          {/* Horizontal Scrolling Gallery - Layout B */}
+          <div className="relative group">
+            {/* Subtle Left Arrow */}
+            <button
+              onClick={() => {
+                if (galleryContainerRef.current) {
+                  galleryContainerRef.current.scrollLeft -= 400
+                }
+              }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+
+            {/* Subtle Right Arrow */}
+            <button
+              onClick={() => {
+                if (galleryContainerRef.current) {
+                  galleryContainerRef.current.scrollLeft += 400
+                }
+              }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+
+            {/* Scrolling Container */}
+            <div
+              ref={galleryContainerRef}
+              onMouseEnter={() => setIsGalleryHovered(true)}
+              onMouseLeave={() => setIsGalleryHovered(false)}
+              className="overflow-x-auto scrollbar-hide"
+              style={{
+                scrollBehavior: 'smooth',
+                WebkitOverflowScrolling: 'touch'
+              }}
+            >
+              {/* Two Rows Grid */}
+              {galleryImages.length > 0 ? (
+                <div className="grid grid-rows-2 gap-4 min-w-max pr-8">
+                  {/* Row 1 - First half of images */}
+                  <div className="flex gap-4">
+                    {galleryImages.slice(0, Math.ceil(galleryImages.length / 2)).map((image, index) => {
+                      const widths = ['w-96', 'w-72', 'w-72', 'w-96', 'w-80', 'w-96']
+                      return (
+                        <div key={image.id} className={`${widths[index % widths.length]} h-64`}>
+                          <img
+                            src={image.image_url}
+                            alt={image.caption || 'Gallery image'}
+                            className="w-full h-full object-cover rounded-3xl"
+                          />
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Row 2 - Second half of images */}
+                  <div className="flex gap-4">
+                    {galleryImages.slice(Math.ceil(galleryImages.length / 2)).map((image, index) => {
+                      const widths = ['w-72', 'w-72', 'w-96', 'w-72', 'w-80', 'w-96']
+                      return (
+                        <div key={image.id} className={`${widths[index % widths.length]} h-64`}>
+                          <img
+                            src={image.image_url}
+                            alt={image.caption || 'Gallery image'}
+                            className="w-full h-full object-cover rounded-3xl"
+                          />
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-16 text-gray-400">
+                  <p>No gallery images available yet. Add images in the admin panel!</p>
+                </div>
+              )}
             </div>
-            <div className="col-span-1 row-span-1">
-              <img
-                src="/IMG_8598.jpg"
-                alt="Event gathering"
-                className="w-full h-full object-cover rounded-3xl"
-              />
-            </div>
-            <div className="col-span-1 row-span-1">
-              <img
-                src="/IMG_8739.jpg"
-                alt="Sunset session"
-                className="w-full h-full object-cover rounded-3xl"
-              />
-            </div>
-            <div className="col-span-1 row-span-1">
-              <img
-                src="/IMG_8817.jpg"
-                alt="Beach activities"
-                className="w-full h-full object-cover rounded-3xl"
-              />
-            </div>
-            <div className="col-span-1 row-span-1">
-              <img
-                src="/IMG_8915.jpg"
-                alt="Community gathering"
-                className="w-full h-full object-cover rounded-3xl"
-              />
-            </div>
-            <div className="col-span-2 row-span-1">
-              <img
-                src="/IMG_8026.jpg"
-                alt="Event celebration"
-                className="w-full h-full object-cover rounded-3xl"
-              />
-            </div>
-            <div className="col-span-1 row-span-1">
-              <img
-                src="/IMG_8041.jpg"
-                alt="Island adventure"
-                className="w-full h-full object-cover rounded-3xl"
-              />
-            </div>
-            <div className="col-span-1 row-span-1">
-              <img
-                src="/IMG_2807.jpg"
-                alt="Camping setup"
-                className="w-full h-full object-cover rounded-3xl"
-              />
+          </div>
+        </div>
+      </section>
+
+      {/* Instagram Feed Section */}
+      <section className="scroll-section neon-border py-20 rounded-3xl" style={{
+        '--section-bg': 'linear-gradient(135deg, rgba(15, 15, 25, 0.95) 0%, rgba(20, 20, 30, 0.95) 100%)',
+        background: 'linear-gradient(135deg, rgba(15, 15, 25, 0.95) 0%, rgba(20, 20, 30, 0.95) 100%)',
+        position: 'relative'
+      } as React.CSSProperties}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section Header */}
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold mb-2 text-gray-500">Stay Connected</p>
+            <h2 className="text-5xl md:text-6xl font-bold text-white mb-4">Follow Our Journey</h2>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Experience the magic through our lens. Follow{" "}
+              <a
+                href="https://instagram.com/sunset.haven__"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] hover:opacity-80 transition-opacity font-semibold"
+              >
+                @sunset.haven__
+              </a>
+              {" "}for daily sunsets, island vibes, and behind-the-scenes moments.
+            </p>
+          </div>
+
+          {/* Instagram Feed Widget Container */}
+          <div className="rounded-3xl overflow-hidden border border-gray-800 p-8" style={{
+            background: 'rgba(20, 20, 30, 0.6)',
+            backdropFilter: 'blur(10px)'
+          }}>
+            {/* Placeholder - Replace with actual widget code */}
+            <div className="text-center py-16">
+              <div className="mb-6">
+                <svg
+                  className="w-20 h-20 mx-auto text-gray-600"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-3">Instagram Feed Coming Soon</h3>
+              <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                We're setting up our live Instagram feed. In the meantime, visit our Instagram to see our latest posts!
+              </p>
+              <a
+                href="https://instagram.com/sunset.haven__"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white font-semibold hover:opacity-90 transition-opacity"
+                style={{ background: 'linear-gradient(135deg, #FF3F02 0%, #FEBE03 100%)' }}
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                </svg>
+                Visit @sunset.haven__
+              </a>
+{/*               <div className="mt-8 p-4 rounded-lg bg-blue-500/10 border border-blue-500/30 max-w-2xl mx-auto">
+                <p className="text-sm text-blue-300">
+                  <strong>Admin Note:</strong> Replace this placeholder with your Instagram widget code. See instructions in the README.
+                </p>
+              </div> */}
             </div>
           </div>
         </div>
@@ -609,28 +1205,48 @@ export default function SunsetHavenResort() {
               background: 'rgba(20, 20, 30, 0.6)',
               backdropFilter: 'blur(10px)'
             }}>
-              <form className="space-y-4">
+              <form onSubmit={handleFormSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Name</label>
-                  <Input placeholder="Enter your name" className="bg-background text-foreground rounded-full" />
+                  <Input
+                    placeholder="Enter your name"
+                    className="bg-background text-foreground rounded-full"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    disabled={isSubmitting}
+                    required
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Phone number</label>
-                  <Input type="tel" placeholder="Enter your phone number" className="bg-background text-foreground rounded-full" />
+                  <Input
+                    type="tel"
+                    placeholder="Enter your phone number"
+                    className="bg-background text-foreground rounded-full"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    disabled={isSubmitting}
+                    required
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">What are you inquiring about?</label>
-                  <Select>
+                  <Select
+                    value={formData.inquiry_type}
+                    onValueChange={(value) => setFormData({ ...formData, inquiry_type: value })}
+                    disabled={isSubmitting}
+                    required
+                  >
                     <SelectTrigger className="bg-background text-foreground rounded-full">
                       <SelectValue placeholder="Select an option" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="premium-camping">Premium Camping</SelectItem>
-                      <SelectItem value="adventure-activities">Adventure Activities</SelectItem>
-                      <SelectItem value="curated-networking">Curated Networking</SelectItem>
-                      <SelectItem value="bespoke-events">Bespoke Events</SelectItem>
-                      <SelectItem value="general-inquiry">General Inquiry</SelectItem>
-                      <SelectItem value="partnership">Partnership Opportunities</SelectItem>
+                      <SelectItem value="Premium Camping">Premium Camping</SelectItem>
+                      <SelectItem value="Adventure Activities">Adventure Activities</SelectItem>
+                      <SelectItem value="Curated Networking">Curated Networking</SelectItem>
+                      <SelectItem value="Bespoke Events">Bespoke Events</SelectItem>
+                      <SelectItem value="General Inquiry">General Inquiry</SelectItem>
+                      <SelectItem value="Partnership Opportunities">Partnership Opportunities</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -640,10 +1256,34 @@ export default function SunsetHavenResort() {
                     placeholder="Tell us more about your inquiry"
                     rows={4}
                     className="bg-background text-foreground rounded-2xl"
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    disabled={isSubmitting}
+                    required
                   />
                 </div>
-                <Button className="w-full text-white rounded-full font-semibold hover:opacity-90" style={{ background: 'linear-gradient(135deg, #FF3F02 0%, #FEBE03 100%)' }}>
-                  Send
+
+                {/* Success Message */}
+                {submitStatus === "success" && (
+                  <div className="p-4 rounded-lg bg-green-500/20 border border-green-500/50 text-green-400 text-center">
+                    Thank you! Your inquiry has been submitted successfully. We'll get back to you soon!
+                  </div>
+                )}
+
+                {/* Error Message */}
+                {submitStatus === "error" && (
+                  <div className="p-4 rounded-lg bg-red-500/20 border border-red-500/50 text-red-400 text-center">
+                    Oops! Something went wrong. Please try again.
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  className="w-full text-white rounded-full font-semibold hover:opacity-90"
+                  style={{ background: 'linear-gradient(135deg, #FF3F02 0%, #FEBE03 100%)' }}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Sending..." : "Send"}
                 </Button>
               </form>
             </div>
@@ -665,10 +1305,10 @@ export default function SunsetHavenResort() {
             <div>
               <h3 className="font-bold text-lg mb-4">Contact</h3>
               <div className="space-y-2 opacity-90">
-                <p>tarkwabaylifestyle@gmail.com</p>
-                <p>+234 806 935 9028</p>
-                <p>Tarkwa Bay Island, Lagos</p>
-                <p className="text-sm pt-2">15 minutes by boat from Lagos</p>
+                <p>{footerSettings?.email || 'tarkwabaylifestyle@gmail.com'}</p>
+                <p>{footerSettings?.phone || '+234 806 935 9028'}</p>
+                <p>{footerSettings?.address || 'Tarkwa Bay Island, Lagos'}</p>
+                <p className="text-sm pt-2">{footerSettings?.additional_info || '15 minutes by boat from Lagos'}</p>
               </div>
             </div>
 
@@ -676,11 +1316,16 @@ export default function SunsetHavenResort() {
             <div>
               <h3 className="font-bold text-lg mb-4">Follow Us</h3>
               <div className="space-y-2">
-                <a href="https://instagram.com/sunset.haven__" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity block">
-                  Instagram: @sunset.haven__
+                <a
+                  href={footerSettings?.instagram_url || 'https://instagram.com/sunset.haven__'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:opacity-80 transition-opacity block"
+                >
+                  Instagram: {footerSettings?.instagram_handle || '@sunset.haven__'}
                 </a>
-                <p className="text-sm opacity-75 pt-2">Year-round availability</p>
-                <p className="text-sm opacity-75">Boat transport available</p>
+                <p className="text-sm opacity-75 pt-2">{footerSettings?.availability_text || 'Year-round availability'}</p>
+                <p className="text-sm opacity-75">{footerSettings?.transport_text || 'Boat transport available'}</p>
               </div>
             </div>
 
@@ -700,7 +1345,7 @@ export default function SunsetHavenResort() {
 
           {/* Copyright */}
           <div className="border-t border-white/20 pt-8 text-center opacity-90 rounded-2xl">
-            <p>© 2025 by Sunset Haven. Powered and secured by Vercel.</p>
+            <p>{footerSettings?.copyright_text || '© 2025 by Sunset Haven. Powered and secured by Vercel.'}</p>
           </div>
         </div>
       </footer>

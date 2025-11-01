@@ -9,10 +9,12 @@ import {
   Images,
   MessageSquare,
   Settings,
+  Calendar,
   Menu,
   X
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Toaster } from "sonner"
 
 interface AdminLayoutProps {
   children: ReactNode
@@ -22,6 +24,7 @@ const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { name: "Inquiries", href: "/admin/inquiries", icon: Inbox },
   { name: "Gallery", href: "/admin/gallery", icon: Images },
+  { name: "Events", href: "/admin/events", icon: Calendar },
   { name: "Testimonials", href: "/admin/testimonials", icon: MessageSquare },
   { name: "Footer Settings", href: "/admin/footer", icon: Settings },
 ]
@@ -134,6 +137,19 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {children}
         </main>
       </div>
+
+      {/* Branded Toast Notifications */}
+      <Toaster
+        position="top-right"
+        richColors
+        theme="dark"
+        toastOptions={{
+          style: {
+            background: '#1a1a1a',
+            border: '1px solid rgba(255, 190, 3, 0.2)',
+          },
+        }}
+      />
     </div>
   )
 }
