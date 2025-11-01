@@ -41,7 +41,12 @@ export default function LoginPage() {
     try {
       await signIn(email, password)
       toast.success('Welcome back!')
-      router.push('/admin')
+
+      // Small delay to ensure session is established
+      setTimeout(() => {
+        router.push('/admin')
+        router.refresh()
+      }, 500)
     } catch (error: any) {
       console.error('Login error:', error)
       toast.error(error.message || 'Invalid credentials')
