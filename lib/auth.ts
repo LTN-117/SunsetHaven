@@ -157,18 +157,8 @@ export async function signIn(email: string, password: string) {
 
   if (error) throw error
 
-  // Update last login (silently fail if RLS prevents it)
-  if (data.user) {
-    try {
-      await supabase
-        .from('admin_profiles')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', data.user.id)
-    } catch (updateError) {
-      // Silently ignore last_login update errors
-      console.log('Could not update last_login:', updateError)
-    }
-  }
+  // Note: last_login tracking removed due to RLS restrictions
+  // Can be re-enabled by updating RLS policies to allow users to update their own last_login field
 
   return data
 }

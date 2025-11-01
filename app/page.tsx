@@ -319,34 +319,68 @@ export default function SunsetHavenResort() {
     document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const experiences = [
+  // Experience cards with dynamic images from database
+  const [experiences, setExperiences] = useState([
     {
       title: "Premium Camping",
       description:
         "Proper beds with duvets and blankets in premium tents. Wake up to stunning island views and the sound of waves. Comfort meets nature in the perfect balance.",
       image: "/premium-camping.jpg",
+      tag: "premium-camping"
     },
     {
       title: "Adventure Activities",
       description:
         "Island exploration, water sports, sunset sessions, quad bike rides, paint & sip, board games, meditation, journaling, and more. Every day brings new experiences.",
       image: "/adventure-activities.jpg",
+      tag: "adventure-activities"
     },
     {
       title: "Curated Networking",
       description:
         "Join 600-1000+ monthly guests who return for the community. Connect with professionals, creatives, and explorers. Build relationships that last beyond your stay.",
       image: "/curated-networking.jpg",
+      tag: "curated-networking"
     },
     {
       title: "Bespoke Events",
       description:
         "From corporate retreats to themed celebrations, raves to intimate gatherings. We coordinate unforgettable experiences tailored to your vision.",
       image: "/bespoke-events.jpg",
+      tag: "bespoke-events"
     },
-  ]
+  ])
 
-  const testimonials = [
+  // Load tagged images for experience cards
+  useEffect(() => {
+    const loadExperienceImages = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('gallery_images')
+          .select('tag, image_url')
+          .not('tag', 'is', null)
+          .eq('is_active', true)
+          .in('tag', ['premium-camping', 'adventure-activities', 'curated-networking', 'bespoke-events'])
+
+        if (error) throw error
+
+        if (data && data.length > 0) {
+          // Update experiences with images from database
+          setExperiences(prev => prev.map(exp => {
+            const taggedImage = data.find(img => img.tag === exp.tag)
+            return taggedImage ? { ...exp, image: taggedImage.image_url } : exp
+          }))
+        }
+      } catch (error) {
+        console.error('Error loading experience images:', error)
+      }
+    }
+
+    loadExperienceImages()
+  }, [])
+
+  // Testimonials from database
+  const [testimonials, setTestimonials] = useState<any[]>([
     {
       quote: "Everything about Sunset Haven was my favorite part",
       author: "Guest Review",
@@ -357,7 +391,34 @@ export default function SunsetHavenResort() {
       author: "Guest Review",
       text: "I love the sunsets there. I enjoyed waking up to watch the sunrise. The staff are very warm and welcoming.",
     },
-  ]
+  ])
+
+  // Load testimonials from database
+  useEffect(() => {
+    const loadTestimonials = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('testimonials')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order', { ascending: true })
+
+        if (error) throw error
+        if (data && data.length > 0) {
+          // Map database fields to component format
+          setTestimonials(data.map(t => ({
+            quote: t.quote,
+            author: t.guest_name + (t.guest_role ? `, ${t.guest_role}` : ''),
+            text: t.quote // Using quote as the main text
+          })))
+        }
+      } catch (error) {
+        console.error('Error loading testimonials:', error)
+      }
+    }
+
+    loadTestimonials()
+  }, [])
 
   return (
     <div className="min-h-screen relative" style={{

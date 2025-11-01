@@ -19,6 +19,10 @@ yarn-error.log*
 # env files
 .env*
 
+# credential files (DELETE THESE AFTER USE!)
+CREATE_YOUR_ADMIN_PROFILE.sql
+*_CREDENTIALS.sql
+
 # vercel
 .vercel
 

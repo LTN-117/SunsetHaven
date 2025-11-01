@@ -1,10 +1,59 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
+  let response = NextResponse.next({
+    request: {
+      headers: req.headers,
+    },
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return req.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          req.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: req.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: CookieOptions) {
+          req.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: req.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
+      },
+    }
+  )
 
   const {
     data: { session },
@@ -30,10 +79,11 @@ export async function middleware(req: NextRequest) {
       .eq('id', session.user.id)
       .single()
 
-    console.log('Middleware - Profile check:', { profile, profileError, userId: session.user.id })
+    console.log('Middleware - Profile check:', { profile, profileError, userId: session.user.id, path: req.nextUrl.pathname })
 
     if (profileError) {
       console.error('Middleware - Profile fetch error:', profileError)
+      console.error('Middleware - Full error details:', JSON.stringify(profileError, null, 2))
       // If there's an error fetching profile, redirect to login
       const redirectUrl = req.nextUrl.clone()
       redirectUrl.pathname = '/admin/login'
@@ -65,9 +115,10 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  return res
+  return response
 }
 
 export const config = {
-  matcher: '/admin/:path*',
+  matcher: [],  // Temporarily disabled for testing
+  // matcher: '/admin/:path*',  // Re-enable this after testing
 }

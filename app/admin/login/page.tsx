@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { signIn, isAuthenticated } from "@/lib/auth"
 import { Toaster } from "sonner"
+import { Eye, EyeOff } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -16,6 +17,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [checkingAuth, setCheckingAuth] = useState(true)
+  const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
     // Check for error parameters
@@ -39,6 +41,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('Form submitted!')
 
     if (!email || !password) {
       toast.error('Please enter both email and password')
@@ -46,20 +49,21 @@ export default function LoginPage() {
     }
 
     setLoading(true)
+    console.log('Attempting login for:', email)
 
     try {
-      await signIn(email, password)
+      const result = await signIn(email, password)
+      console.log('Login successful:', result)
       toast.success('Welcome back!')
 
-      // Small delay to ensure session is established
+      // Use window.location for full page reload to ensure session cookie is set
       setTimeout(() => {
-        router.push('/admin')
-        router.refresh()
+        console.log('Redirecting to /admin')
+        window.location.href = '/admin'
       }, 500)
     } catch (error: any) {
       console.error('Login error:', error)
       toast.error(error.message || 'Invalid credentials')
-    } finally {
       setLoading(false)
     }
   }
@@ -109,15 +113,29 @@ export default function LoginPage() {
 
             <div>
               <Label htmlFor="password" className="text-gray-300">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="mt-1 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
-                disabled={loading}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="mt-1 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500 pr-10"
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <Button

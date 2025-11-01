@@ -493,7 +493,7 @@ export default function UsersPage() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="user@example.com"
-                  className="mt-1 bg-gray-900 border-gray-700 text-white"
+                  className="mt-1 bg-gray-800 border-gray-600 text-white placeholder:text-gray-400 focus:border-[#FEBE03]"
                   disabled={!!editingId} // Cannot change email
                   required
                 />
@@ -507,7 +507,7 @@ export default function UsersPage() {
                   value={formData.full_name}
                   onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                   placeholder="John Doe"
-                  className="mt-1 bg-gray-900 border-gray-700 text-white"
+                  className="mt-1 bg-gray-800 border-gray-600 text-white placeholder:text-gray-400 focus:border-[#FEBE03]"
                   required
                 />
               </div>
@@ -522,7 +522,7 @@ export default function UsersPage() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder={editingId ? 'Leave blank to keep unchanged' : 'Min. 8 characters'}
-                  className="mt-1 bg-gray-900 border-gray-700 text-white"
+                  className="mt-1 bg-gray-800 border-gray-600 text-white placeholder:text-gray-400 focus:border-[#FEBE03]"
                   required={!editingId}
                 />
                 {editingId && (
@@ -536,14 +536,14 @@ export default function UsersPage() {
                   value={formData.role}
                   onValueChange={(value: any) => setFormData({ ...formData, role: value })}
                 >
-                  <SelectTrigger className="mt-1 bg-gray-900 border-gray-700 text-white">
+                  <SelectTrigger className="mt-1 bg-gray-800 border-gray-600 text-white focus:border-[#FEBE03]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="super_admin">Super Admin (Full Access)</SelectItem>
-                    <SelectItem value="admin">Admin (Manage Content)</SelectItem>
-                    <SelectItem value="editor">Editor (Edit Only)</SelectItem>
-                    <SelectItem value="viewer">Viewer (Read Only)</SelectItem>
+                  <SelectContent className="bg-gray-800 border-gray-600 text-white">
+                    <SelectItem value="super_admin" className="text-white hover:bg-gray-700">Super Admin (Full Access)</SelectItem>
+                    <SelectItem value="admin" className="text-white hover:bg-gray-700">Admin (Manage Content)</SelectItem>
+                    <SelectItem value="editor" className="text-white hover:bg-gray-700">Editor (Edit Only)</SelectItem>
+                    <SelectItem value="viewer" className="text-white hover:bg-gray-700">Viewer (Read Only)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

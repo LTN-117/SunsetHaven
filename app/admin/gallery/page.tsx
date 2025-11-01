@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -29,9 +30,12 @@ interface GalleryImage {
   image_url: string
   caption: string
   category: string
+  tag?: string | null
+  activity_id?: string | null
   display_order: number
   is_active: boolean
   show_in_hero: boolean
+  show_in_gallery?: boolean
   created_at: string
 }
 
@@ -45,6 +49,9 @@ export default function GalleryPage() {
     image_url: '',
     caption: '',
     category: 'general',
+    tag: '',
+    show_in_hero: false,
+    show_in_gallery: true,
   })
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string>('')
@@ -76,8 +83,12 @@ export default function GalleryPage() {
   function filterImages() {
     if (categoryFilter === "all") {
       setFilteredImages(images)
+    } else if (categoryFilter === "hero") {
+      setFilteredImages(images.filter(img => img.show_in_hero && !img.tag))
+    } else if (categoryFilter === "gallery") {
+      setFilteredImages(images.filter(img => img.show_in_gallery && !img.tag && !img.show_in_hero))
     } else {
-      setFilteredImages(images.filter(img => img.category === categoryFilter))
+      setFilteredImages(images.filter(img => img.tag === categoryFilter))
     }
   }
 
@@ -99,12 +110,40 @@ export default function GalleryPage() {
   }
 
   async function addImage() {
-    if (!newImage.image_url) {
-      toast.error('Please enter an image URL')
+    if (!uploadedFile && !newImage.image_url) {
+      toast.error('Please upload an image or enter an image URL')
       return
     }
 
     try {
+      let imageUrl = newImage.image_url
+
+      // If user uploaded a file, upload it to Supabase Storage
+      if (uploadedFile) {
+        const fileExt = uploadedFile.name.split('.').pop()
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+        const filePath = `${fileName}`
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('gallery-images')
+          .upload(filePath, uploadedFile, {
+            cacheControl: '3600',
+            upsert: false
+          })
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError)
+          throw new Error(`Failed to upload image: ${uploadError.message}`)
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('gallery-images')
+          .getPublicUrl(filePath)
+
+        imageUrl = publicUrl
+      }
+
       const maxOrder = images.length > 0
         ? Math.max(...images.map(img => img.display_order))
         : -1
@@ -112,9 +151,14 @@ export default function GalleryPage() {
       const { data, error } = await supabase
         .from('gallery_images')
         .insert([{
-          ...newImage,
+          image_url: imageUrl,
+          caption: newImage.caption,
+          category: newImage.category,
+          tag: newImage.tag || null,
           display_order: maxOrder + 1,
-          is_active: true
+          is_active: true,
+          show_in_hero: newImage.show_in_hero,
+          show_in_gallery: newImage.show_in_gallery
         }])
         .select()
 
@@ -129,14 +173,17 @@ export default function GalleryPage() {
         image_url: '',
         caption: '',
         category: 'general',
+        tag: '',
+        show_in_hero: false,
+        show_in_gallery: true,
       })
       setUploadedFile(null)
       setPreviewUrl('')
       setDialogOpen(false)
       toast.success('Image added successfully!')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding image:', error)
-      toast.error('Failed to add image. Please try again.')
+      toast.error(error.message || 'Failed to add image. Please try again.')
     }
   }
 
@@ -225,15 +272,16 @@ export default function GalleryPage() {
         <div className="flex items-center justify-between gap-4 rounded-2xl p-4 border border-gray-800" style={{ background: 'rgba(20, 20, 30, 0.6)' }}>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-[200px] bg-gray-800 border-gray-700 text-white">
-              <SelectValue placeholder="Filter by category" />
+              <SelectValue placeholder="Filter by tag" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map(cat => (
-                <SelectItem key={cat} value={cat}>
-                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                </SelectItem>
-              ))}
+              <SelectItem value="all">All Images</SelectItem>
+              <SelectItem value="hero">Hero Only</SelectItem>
+              <SelectItem value="gallery">Gallery Only</SelectItem>
+              <SelectItem value="bespoke-events">Bespoke Events</SelectItem>
+              <SelectItem value="curated-networking">Curated Networking</SelectItem>
+              <SelectItem value="adventure-activities">Adventure Activities</SelectItem>
+              <SelectItem value="premium-camping">Premium Camping</SelectItem>
             </SelectContent>
           </Select>
 
@@ -304,11 +352,24 @@ export default function GalleryPage() {
                     </div>
 
                     {/* Status Badges */}
-                    <div className="absolute top-2 right-2 flex gap-2">
+                    <div className="absolute top-2 right-2 flex flex-col gap-1">
                       {image.show_in_hero && (
                         <div className="bg-yellow-500/90 text-white px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
                           <Star className="h-3 w-3 fill-white" />
                           Hero
+                        </div>
+                      )}
+                      {image.show_in_gallery && (
+                        <div className="bg-blue-500/90 text-white px-2 py-1 rounded text-xs font-semibold">
+                          Gallery
+                        </div>
+                      )}
+                      {image.tag && (
+                        <div className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-white px-2 py-1 rounded text-xs font-semibold">
+                          {image.tag === 'bespoke-events' ? 'Bespoke Events' :
+                           image.tag === 'curated-networking' ? 'Curated Networking' :
+                           image.tag === 'adventure-activities' ? 'Adventure Activities' :
+                           image.tag === 'premium-camping' ? 'Premium Camping' : image.tag}
                         </div>
                       )}
                       {!image.is_active && (
@@ -340,7 +401,7 @@ export default function GalleryPage() {
 
         {/* Add Image Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="bg-[#1a1a1a] border-gray-800 text-white">
+          <DialogContent className="bg-[#1a1a1a] border-gray-800 text-white max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-white">
                 Add New Image
@@ -397,24 +458,53 @@ export default function GalleryPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="category" className="text-gray-300">
-                  Category
+                <Label htmlFor="tag" className="text-gray-300">
+                  Link to "What We've Built" Card (Optional)
                 </Label>
                 <Select
-                  value={newImage.category}
-                  onValueChange={(value) => setNewImage({ ...newImage, category: value })}
+                  value={newImage.tag || "none"}
+                  onValueChange={(value) => setNewImage({ ...newImage, tag: value === "none" ? '' : value })}
                 >
-                  <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                    <SelectValue />
+                  <SelectTrigger className="bg-gray-800 border-gray-600 text-white focus:border-[#FEBE03]">
+                    <SelectValue placeholder="Select a card" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(cat => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                      </SelectItem>
-                    ))}
+                  <SelectContent className="bg-gray-800 border-gray-600 text-white">
+                    <SelectItem value="none" className="text-white hover:bg-gray-700">None</SelectItem>
+                    <SelectItem value="bespoke-events" className="text-white hover:bg-gray-700">Bespoke Events</SelectItem>
+                    <SelectItem value="curated-networking" className="text-white hover:bg-gray-700">Curated Networking</SelectItem>
+                    <SelectItem value="adventure-activities" className="text-white hover:bg-gray-700">Adventure Activities</SelectItem>
+                    <SelectItem value="premium-camping" className="text-white hover:bg-gray-700">Premium Camping</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-gray-500">Select which "What We've Built" card should display this image</p>
+              </div>
+
+              <div className="space-y-3 pt-2 border-t border-gray-700">
+                <Label className="text-gray-300">Display Options</Label>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="show_in_hero"
+                    checked={newImage.show_in_hero}
+                    onCheckedChange={(checked) => setNewImage({ ...newImage, show_in_hero: checked as boolean })}
+                    className="border-gray-600 data-[state=checked]:bg-[#FEBE03] data-[state=checked]:border-[#FEBE03]"
+                  />
+                  <Label htmlFor="show_in_hero" className="text-sm text-gray-300 cursor-pointer">
+                    Show in Hero Section
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="show_in_gallery"
+                    checked={newImage.show_in_gallery}
+                    onCheckedChange={(checked) => setNewImage({ ...newImage, show_in_gallery: checked as boolean })}
+                    className="border-gray-600 data-[state=checked]:bg-[#FEBE03] data-[state=checked]:border-[#FEBE03]"
+                  />
+                  <Label htmlFor="show_in_gallery" className="text-sm text-gray-300 cursor-pointer">
+                    Show in Gallery
+                  </Label>
+                </div>
               </div>
 
               {newImage.image_url && (
