@@ -356,25 +356,47 @@ ON CONFLICT (role, resource) DO UPDATE SET
   can_delete = EXCLUDED.can_delete;
 
 -- =====================================================
--- 7. INSERT DEFAULT FOOTER SETTINGS
+-- 7. INSERT DEFAULT FOOTER SETTINGS (only if table is empty)
 -- =====================================================
 
-INSERT INTO footer_settings (
-  instagram_url,
-  x_url,
-  facebook_url,
-  email,
-  phone,
-  address
-)
-SELECT
-  'https://instagram.com/sunsethaven',
-  'https://x.com/sunsethaven',
-  'https://facebook.com/sunsethaven',
-  'hello@sunsethaven.com',
-  '+234 XXX XXX XXXX',
-  'Tarkwa Bay Island, Lagos, Nigeria'
-WHERE NOT EXISTS (SELECT 1 FROM footer_settings);
+-- Only insert if footer_settings is completely empty
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM footer_settings LIMIT 1) THEN
+    -- Check which column exists (x_url or twitter_url) and insert accordingly
+    IF EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'footer_settings' AND column_name = 'x_url'
+    ) THEN
+      INSERT INTO footer_settings (instagram_url, x_url, facebook_url, email, phone, address)
+      VALUES (
+        'https://instagram.com/sunsethaven',
+        'https://x.com/sunsethaven',
+        'https://facebook.com/sunsethaven',
+        'hello@sunsethaven.com',
+        '+234 XXX XXX XXXX',
+        'Tarkwa Bay Island, Lagos, Nigeria'
+      );
+      RAISE NOTICE 'Inserted default footer settings with x_url';
+    ELSIF EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'footer_settings' AND column_name = 'twitter_url'
+    ) THEN
+      INSERT INTO footer_settings (instagram_url, twitter_url, facebook_url, email, phone, address)
+      VALUES (
+        'https://instagram.com/sunsethaven',
+        'https://twitter.com/sunsethaven',
+        'https://facebook.com/sunsethaven',
+        'hello@sunsethaven.com',
+        '+234 XXX XXX XXXX',
+        'Tarkwa Bay Island, Lagos, Nigeria'
+      );
+      RAISE NOTICE 'Inserted default footer settings with twitter_url';
+    END IF;
+  ELSE
+    RAISE NOTICE 'Footer settings already exist, skipping insert';
+  END IF;
+END $$;
 
 -- =====================================================
 -- SETUP COMPLETE!
