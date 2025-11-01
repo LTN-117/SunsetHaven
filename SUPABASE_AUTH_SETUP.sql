@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS testimonials (
 CREATE TABLE IF NOT EXISTS footer_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   instagram_url TEXT,
-  twitter_url TEXT,
+  x_url TEXT,
   facebook_url TEXT,
   email TEXT,
   phone TEXT,
@@ -361,7 +361,7 @@ ON CONFLICT (role, resource) DO UPDATE SET
 
 INSERT INTO footer_settings (
   instagram_url,
-  twitter_url,
+  x_url,
   facebook_url,
   email,
   phone,
@@ -369,7 +369,7 @@ INSERT INTO footer_settings (
 )
 SELECT
   'https://instagram.com/sunsethaven',
-  'https://twitter.com/sunsethaven',
+  'https://x.com/sunsethaven',
   'https://facebook.com/sunsethaven',
   'hello@sunsethaven.com',
   '+234 XXX XXX XXXX',
