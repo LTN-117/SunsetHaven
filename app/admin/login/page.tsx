@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,12 +11,21 @@ import { Toaster } from "sonner"
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [checkingAuth, setCheckingAuth] = useState(true)
 
   useEffect(() => {
+    // Check for error parameters
+    const error = searchParams.get('error')
+    if (error === 'profile_error') {
+      toast.error('Unable to load your profile. Please contact support.')
+    } else if (error === 'unauthorized') {
+      toast.error('Your account is not authorized. Please contact an administrator.')
+    }
+
     // Check if already logged in
     const checkAuth = async () => {
       const authed = await isAuthenticated()
@@ -26,7 +35,7 @@ export default function LoginPage() {
       setCheckingAuth(false)
     }
     checkAuth()
-  }, [router])
+  }, [router, searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
