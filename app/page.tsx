@@ -859,7 +859,7 @@ export default function SunsetHavenResort() {
         </div>
       </section>
 
-      <section id="experiences" className="scroll-section neon-border pt-4 pb-20 rounded-3xl" style={{
+      <section id="experiences" className="scroll-section neon-border pb-20 rounded-3xl" style={{
         '--section-bg': 'linear-gradient(135deg, rgba(10, 10, 15, 0.95) 0%, rgba(15, 15, 20, 0.95) 100%)',
         background: 'linear-gradient(135deg, rgba(10, 10, 15, 0.95) 0%, rgba(15, 15, 20, 0.95) 100%)',
         position: 'relative'

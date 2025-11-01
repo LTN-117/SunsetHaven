@@ -2,7 +2,7 @@
 
 import { ReactNode, useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   LayoutDashboard,
   Inbox,
@@ -10,11 +10,16 @@ import {
   MessageSquare,
   Settings,
   Calendar,
+  Mail,
+  Users,
+  LogOut,
   Menu,
   X
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Toaster } from "sonner"
+import { signOut } from "@/lib/auth"
+import { toast } from "sonner"
 
 interface AdminLayoutProps {
   children: ReactNode
@@ -25,13 +30,27 @@ const navigation = [
   { name: "Inquiries", href: "/admin/inquiries", icon: Inbox },
   { name: "Gallery", href: "/admin/gallery", icon: Images },
   { name: "Events", href: "/admin/events", icon: Calendar },
+  { name: "Newsletter", href: "/admin/newsletter", icon: Mail },
   { name: "Testimonials", href: "/admin/testimonials", icon: MessageSquare },
+  { name: "Users", href: "/admin/users", icon: Users },
   { name: "Footer Settings", href: "/admin/footer", icon: Settings },
 ]
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      toast.success('Logged out successfully')
+      router.push('/admin/login')
+    } catch (error) {
+      console.error('Logout error:', error)
+      toast.error('Failed to logout')
+    }
+  }
 
   return (
     <div className="min-h-screen" style={{ background: '#0a0a0a' }}>
@@ -100,10 +119,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               )
             })}
           </nav>
-          <div className="pt-6 border-t border-gray-800">
+          <div className="pt-6 border-t border-gray-800 space-y-2">
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              className="w-full justify-start text-gray-400 hover:text-white hover:bg-gray-800"
+            >
+              <LogOut className="h-5 w-5 mr-3" />
+              Sign Out
+            </Button>
             <Link
               href="/"
-              className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+              className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors px-4 py-2"
             >
               <span>← Back to Website</span>
             </Link>
