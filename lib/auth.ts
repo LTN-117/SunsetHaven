@@ -26,19 +26,28 @@ export interface RolePermissions {
 // Get current user's admin profile
 export async function getAdminProfile(): Promise<AdminProfile | null> {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
+    // Check localStorage for single admin authentication
+    if (typeof window !== 'undefined') {
+      const isLoggedIn = localStorage.getItem('isAdminLoggedIn')
+      const adminEmail = localStorage.getItem('adminEmail')
 
-    if (!user) return null
+      if (isLoggedIn === 'true' && adminEmail === 'admin@sunsethaven.com') {
+        // Return a mock admin profile for the single hardcoded admin
+        return {
+          id: 'admin-1',
+          email: 'admin@sunsethaven.com',
+          full_name: 'Admin',
+          role: 'super_admin',
+          is_active: true,
+          is_deletable: false,
+          last_login: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      }
+    }
 
-    const { data, error } = await supabase
-      .from('admin_profiles')
-      .select('*')
-      .eq('id', user.id)
-      .eq('is_active', true)
-      .single()
-
-    if (error) throw error
-    return data
+    return null
   } catch (error) {
     console.error('Error fetching admin profile:', error)
     return null
