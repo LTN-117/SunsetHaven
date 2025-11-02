@@ -1,10 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import AdminLayout from "@/components/admin/AdminLayout"
 import { supabase } from "@/lib/supabase"
-import { getAdminProfile, getUserPermissions } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -28,39 +26,14 @@ interface FooterSettings {
 }
 
 export default function FooterSettingsPage() {
-  const router = useRouter()
   const [settings, setSettings] = useState<FooterSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
-  const [permissions, setPermissions] = useState<any>(null)
 
   useEffect(() => {
-    checkPermissionsAndLoad()
+    loadSettings()
   }, [])
-
-  async function checkPermissionsAndLoad() {
-    try {
-      const profile = await getAdminProfile()
-      if (!profile) {
-        router.push('/admin/login')
-        return
-      }
-
-      const perms = await getUserPermissions('footer')
-      if (!perms || !perms.can_view) {
-        toast.error('You do not have permission to view footer settings')
-        router.push('/admin')
-        return
-      }
-      setPermissions(perms)
-
-      await loadSettings()
-    } catch (error) {
-      console.error('Error checking permissions:', error)
-      router.push('/admin')
-    }
-  }
 
   async function loadSettings() {
     try {
@@ -82,11 +55,6 @@ export default function FooterSettingsPage() {
   }
 
   async function saveSettings() {
-    if (!permissions?.can_edit) {
-      toast.error('You do not have permission to edit footer settings')
-      return
-    }
-
     if (!settings) return
 
     setSaving(true)
@@ -186,7 +154,6 @@ export default function FooterSettingsPage() {
                     onChange={(e) => setSettings({ ...settings, email: e.target.value })}
                     className="bg-gray-800 border-gray-700 text-white"
                     placeholder="contact@example.com"
-                    disabled={!permissions?.can_edit}
                   />
                 </div>
 
@@ -202,7 +169,6 @@ export default function FooterSettingsPage() {
                     onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
                     className="bg-gray-800 border-gray-700 text-white"
                     placeholder="+234 XXX XXX XXXX"
-                    disabled={!permissions?.can_edit}
                   />
                 </div>
               </div>
@@ -218,7 +184,6 @@ export default function FooterSettingsPage() {
                   onChange={(e) => setSettings({ ...settings, address: e.target.value })}
                   className="bg-gray-800 border-gray-700 text-white"
                   placeholder="Tarkwa Bay Island, Lagos"
-                  disabled={!permissions?.can_edit}
                 />
               </div>
 
@@ -233,7 +198,6 @@ export default function FooterSettingsPage() {
                   onChange={(e) => setSettings({ ...settings, additional_info: e.target.value })}
                   className="bg-gray-800 border-gray-700 text-white"
                   placeholder="15 minutes by boat from Lagos"
-                  disabled={!permissions?.can_edit}
                 />
               </div>
             </div>
@@ -256,7 +220,6 @@ export default function FooterSettingsPage() {
                     onChange={(e) => setSettings({ ...settings, instagram_handle: e.target.value })}
                     className="bg-gray-800 border-gray-700 text-white"
                     placeholder="@sunset.haven__"
-                    disabled={!permissions?.can_edit}
                   />
                 </div>
 
@@ -271,7 +234,6 @@ export default function FooterSettingsPage() {
                     onChange={(e) => setSettings({ ...settings, instagram_url: e.target.value })}
                     className="bg-gray-800 border-gray-700 text-white"
                     placeholder="https://instagram.com/sunset.haven__"
-                    disabled={!permissions?.can_edit}
                   />
                 </div>
               </div>
@@ -296,7 +258,6 @@ export default function FooterSettingsPage() {
                     onChange={(e) => setSettings({ ...settings, availability_text: e.target.value })}
                     className="bg-gray-800 border-gray-700 text-white"
                     placeholder="Year-round availability"
-                    disabled={!permissions?.can_edit}
                   />
                 </div>
 
@@ -311,7 +272,6 @@ export default function FooterSettingsPage() {
                     onChange={(e) => setSettings({ ...settings, transport_text: e.target.value })}
                     className="bg-gray-800 border-gray-700 text-white"
                     placeholder="Boat transport available"
-                    disabled={!permissions?.can_edit}
                   />
                 </div>
               </div>
@@ -335,7 +295,6 @@ export default function FooterSettingsPage() {
                   className="bg-gray-800 border-gray-700 text-white"
                   placeholder="© 2025 by Sunset Haven. Powered and secured by Vercel."
                   rows={2}
-                  disabled={!permissions?.can_edit}
                 />
               </div>
 
@@ -349,7 +308,6 @@ export default function FooterSettingsPage() {
                   onChange={(e) => setSettings({ ...settings, powered_by_text: e.target.value })}
                   className="bg-gray-800 border-gray-700 text-white"
                   placeholder="Powered and secured by Vercel"
-                  disabled={!permissions?.can_edit}
                 />
               </div>
             </div>
@@ -358,7 +316,7 @@ export default function FooterSettingsPage() {
             <div className="flex justify-end pt-6 border-t border-gray-800">
               <Button
                 onClick={saveSettings}
-                disabled={saving || !permissions?.can_edit}
+                disabled={saving}
                 className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-black hover:opacity-90 px-8"
               >
                 {saving ? (

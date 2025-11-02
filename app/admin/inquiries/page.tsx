@@ -1,10 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import AdminLayout from "@/components/admin/AdminLayout"
 import { supabase } from "@/lib/supabase"
-import { getAdminProfile, getUserPermissions } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -45,45 +43,20 @@ interface Inquiry {
 }
 
 export default function InquiriesPage() {
-  const router = useRouter()
   const [inquiries, setInquiries] = useState<Inquiry[]>([])
   const [filteredInquiries, setFilteredInquiries] = useState<Inquiry[]>([])
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null)
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [permissions, setPermissions] = useState<any>(null)
 
   useEffect(() => {
-    checkPermissionsAndLoad()
+    loadInquiries()
   }, [])
 
   useEffect(() => {
     filterInquiries()
   }, [inquiries, statusFilter])
-
-  async function checkPermissionsAndLoad() {
-    try {
-      const profile = await getAdminProfile()
-      if (!profile) {
-        router.push('/admin/login')
-        return
-      }
-
-      const perms = await getUserPermissions('inquiries')
-      if (!perms || !perms.can_view) {
-        toast.error('You do not have permission to view inquiries')
-        router.push('/admin')
-        return
-      }
-      setPermissions(perms)
-
-      await loadInquiries()
-    } catch (error) {
-      console.error('Error checking permissions:', error)
-      router.push('/admin')
-    }
-  }
 
   async function loadInquiries() {
     try {
@@ -110,11 +83,6 @@ export default function InquiriesPage() {
   }
 
   async function updateStatus(id: string, newStatus: Inquiry['status']) {
-    if (!permissions?.can_edit) {
-      toast.error('You do not have permission to update inquiry status')
-      return
-    }
-
     try {
       const { error } = await supabase
         .from('inquiries')
@@ -348,7 +316,6 @@ export default function InquiriesPage() {
                   <Select
                     value={selectedInquiry.status}
                     onValueChange={(value) => updateStatus(selectedInquiry.id, value as Inquiry['status'])}
-                    disabled={!permissions?.can_edit}
                   >
                     <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                       <SelectValue />

@@ -1,10 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import AdminLayout from "@/components/admin/AdminLayout"
 import { supabase } from "@/lib/supabase"
-import { getAdminProfile, getUserPermissions } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -53,7 +51,6 @@ interface GalleryImage {
 }
 
 export default function GalleryPage() {
-  const router = useRouter()
   const [images, setImages] = useState<GalleryImage[]>([])
   const [filteredImages, setFilteredImages] = useState<GalleryImage[]>([])
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
@@ -61,7 +58,6 @@ export default function GalleryPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [imageToDelete, setImageToDelete] = useState<string | null>(null)
-  const [permissions, setPermissions] = useState<any>(null)
   const [newImage, setNewImage] = useState({
     image_url: '',
     caption: '',
@@ -75,35 +71,12 @@ export default function GalleryPage() {
   const [isAdding, setIsAdding] = useState(false)
 
   useEffect(() => {
-    checkPermissionsAndLoad()
+    loadImages()
   }, [])
 
   useEffect(() => {
     filterImages()
   }, [images, categoryFilter])
-
-  async function checkPermissionsAndLoad() {
-    try {
-      const profile = await getAdminProfile()
-      if (!profile) {
-        router.push('/admin/login')
-        return
-      }
-
-      const perms = await getUserPermissions('gallery')
-      if (!perms || !perms.can_view) {
-        toast.error('You do not have permission to view gallery')
-        router.push('/admin')
-        return
-      }
-      setPermissions(perms)
-
-      await loadImages()
-    } catch (error) {
-      console.error('Error checking permissions:', error)
-      router.push('/admin')
-    }
-  }
 
   async function loadImages() {
     try {
@@ -151,11 +124,6 @@ export default function GalleryPage() {
   }
 
   async function addImage() {
-    if (!permissions?.can_create) {
-      toast.error('You do not have permission to add images')
-      return
-    }
-
     if (!uploadedFile && !newImage.image_url) {
       toast.error('Please upload an image or enter an image URL')
       return
@@ -252,10 +220,6 @@ export default function GalleryPage() {
   }
 
   function confirmDelete(id: string) {
-    if (!permissions?.can_delete) {
-      toast.error('You do not have permission to delete images')
-      return
-    }
     setImageToDelete(id)
     setDeleteDialogOpen(true)
   }
@@ -282,11 +246,6 @@ export default function GalleryPage() {
   }
 
   async function toggleActive(id: string, currentStatus: boolean) {
-    if (!permissions?.can_edit) {
-      toast.error('You do not have permission to edit images')
-      return
-    }
-
     try {
       const { error } = await supabase
         .from('gallery_images')
@@ -304,11 +263,6 @@ export default function GalleryPage() {
   }
 
   async function toggleHero(id: string, currentStatus: boolean) {
-    if (!permissions?.can_edit) {
-      toast.error('You do not have permission to edit images')
-      return
-    }
-
     try {
       const { error } = await supabase
         .from('gallery_images')
@@ -373,7 +327,6 @@ export default function GalleryPage() {
           <Button
             onClick={() => setDialogOpen(true)}
             className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-black hover:opacity-90"
-            disabled={!permissions?.can_create}
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Image
@@ -416,7 +369,6 @@ export default function GalleryPage() {
                         onClick={() => toggleHero(image.id, image.show_in_hero)}
                         className={`${image.show_in_hero ? 'bg-yellow-500/30 hover:bg-yellow-500/40' : 'bg-white/20 hover:bg-white/30'} text-white`}
                         title={image.show_in_hero ? "Remove from hero" : "Add to hero"}
-                        disabled={!permissions?.can_edit}
                       >
                         <Star className={`h-4 w-4 ${image.show_in_hero ? 'fill-yellow-400 text-yellow-400' : ''}`} />
                       </Button>
@@ -425,7 +377,6 @@ export default function GalleryPage() {
                         size="icon"
                         onClick={() => toggleActive(image.id, image.is_active)}
                         className="bg-white/20 hover:bg-white/30 text-white"
-                        disabled={!permissions?.can_edit}
                       >
                         {image.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                       </Button>
@@ -434,7 +385,6 @@ export default function GalleryPage() {
                         size="icon"
                         onClick={() => confirmDelete(image.id)}
                         className="bg-red-500/20 hover:bg-red-500/30 text-red-400"
-                        disabled={!permissions?.can_delete}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
