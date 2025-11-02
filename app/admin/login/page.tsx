@@ -29,31 +29,8 @@ export default function LoginPage() {
       toast.error('Your account is not authorized. Please contact an administrator.')
     }
 
-    // Check if already logged in with valid admin profile
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-
-        if (session) {
-          // Verify admin profile exists and is active
-          const { data: profile, error: profileError } = await supabase
-            .from('admin_profiles')
-            .select('is_active')
-            .eq('id', session.user.id)
-            .single()
-
-          if (!profileError && profile?.is_active) {
-            router.push('/admin')
-            return
-          }
-        }
-      } catch (error) {
-        console.error('Auth check error:', error)
-      }
-      setCheckingAuth(false)
-    }
-    checkAuth()
-  }, [router, searchParams])
+    setCheckingAuth(false)
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
