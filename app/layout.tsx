@@ -15,10 +15,14 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: "Sunset Haven Resort - Nigeria's Premier Island Eco-Tourism Experience",
+  title: "Sunset Haven",
   description:
     "Experience luxury eco-tourism at Sunset Haven Resort on Takwa Bay Island, Lagos. Premium glamping, sustainable practices, and unforgettable island adventures.",
-  generator: "v0.app",
+  icons: {
+    icon: '/sunset-haven-logo.png',
+    shortcut: '/sunset-haven-logo.png',
+    apple: '/sunset-haven-logo.png',
+  },
 }
 
 export default function RootLayout({
