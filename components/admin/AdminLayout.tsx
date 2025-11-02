@@ -43,26 +43,25 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isChecking, setIsChecking] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   // Check if user is logged in
   useEffect(() => {
-    // Ensure we're on the client side
-    if (typeof window === 'undefined') return
+    setMounted(true)
+  }, [])
 
-    const checkAuth = () => {
-      const isLoggedIn = localStorage.getItem('isAdminLoggedIn')
+  useEffect(() => {
+    if (!mounted) return
 
-      if (isLoggedIn !== 'true') {
-        router.push('/admin/login')
-        return
-      }
+    const isLoggedIn = localStorage.getItem('isAdminLoggedIn')
 
-      setIsChecking(false)
+    if (isLoggedIn !== 'true') {
+      router.push('/admin/login')
+      return
     }
 
-    // Small delay to ensure localStorage is ready
-    setTimeout(checkAuth, 100)
-  }, [router])
+    setIsChecking(false)
+  }, [mounted, router])
 
   const handleLogout = () => {
     // Clear localStorage session
