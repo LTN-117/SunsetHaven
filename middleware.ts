@@ -55,6 +55,7 @@ export async function middleware(req: NextRequest) {
     }
   )
 
+  // Refresh session to get the latest state
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -79,20 +80,9 @@ export async function middleware(req: NextRequest) {
       .eq('id', session.user.id)
       .single()
 
-    console.log('Middleware - Profile check:', { profile, profileError, userId: session.user.id, path: req.nextUrl.pathname })
-
-    if (profileError) {
-      console.error('Middleware - Profile fetch error:', profileError)
-      console.error('Middleware - Full error details:', JSON.stringify(profileError, null, 2))
-      // If there's an error fetching profile, redirect to login
-      const redirectUrl = req.nextUrl.clone()
-      redirectUrl.pathname = '/admin/login'
-      redirectUrl.searchParams.set('error', 'profile_error')
-      return NextResponse.redirect(redirectUrl)
-    }
-
-    if (!profile || !profile.is_active) {
-      // User exists in auth but no admin profile or inactive
+    if (profileError || !profile || !profile.is_active) {
+      // Clear session and redirect to login
+      await supabase.auth.signOut()
       const redirectUrl = req.nextUrl.clone()
       redirectUrl.pathname = '/admin/login'
       redirectUrl.searchParams.set('error', 'unauthorized')
@@ -119,5 +109,7 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: [],  // Disabled - using client-side auth protection instead
+  // The middleware was causing redirect loops after login due to session timing issues
+  // Each admin page now handles its own auth check client-side
 }

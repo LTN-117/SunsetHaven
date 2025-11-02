@@ -1,6 +1,6 @@
 "use client"
 
-import { ReactNode, useState } from "react"
+import { ReactNode, useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import Script from "next/script"
@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button"
 import { Toaster } from "sonner"
 import { signOut } from "@/lib/auth"
 import { toast } from "sonner"
+import { supabase } from "@/lib/supabase"
 
 interface AdminLayoutProps {
   children: ReactNode
@@ -41,6 +42,36 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isChecking, setIsChecking] = useState(true)
+
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (!session) {
+        router.push('/admin/login')
+        return
+      }
+
+      // Verify admin profile
+      const { data: profile, error } = await supabase
+        .from('admin_profiles')
+        .select('is_active')
+        .eq('id', session.user.id)
+        .single()
+
+      if (error || !profile || !profile.is_active) {
+        toast.error('Unauthorized access')
+        router.push('/admin/login')
+        return
+      }
+
+      setIsChecking(false)
+    }
+
+    checkAuth()
+  }, [router])
 
   const handleLogout = async () => {
     try {
@@ -51,6 +82,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       console.error('Logout error:', error)
       toast.error('Failed to logout')
     }
+  }
+
+  // Show loading while checking auth
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0a' }}>
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#FEBE03] border-r-transparent"></div>
+      </div>
+    )
   }
 
   return (
