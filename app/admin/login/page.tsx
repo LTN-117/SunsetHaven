@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { signIn, isAuthenticated } from "@/lib/auth"
 import { Toaster } from "sonner"
 import { Eye, EyeOff } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -28,11 +29,26 @@ export default function LoginPage() {
       toast.error('Your account is not authorized. Please contact an administrator.')
     }
 
-    // Check if already logged in
+    // Check if already logged in with valid admin profile
     const checkAuth = async () => {
-      const authed = await isAuthenticated()
-      if (authed) {
-        router.push('/admin')
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (session) {
+          // Verify admin profile exists and is active
+          const { data: profile, error: profileError } = await supabase
+            .from('admin_profiles')
+            .select('is_active')
+            .eq('id', session.user.id)
+            .single()
+
+          if (!profileError && profile?.is_active) {
+            router.push('/admin')
+            return
+          }
+        }
+      } catch (error) {
+        console.error('Auth check error:', error)
       }
       setCheckingAuth(false)
     }
