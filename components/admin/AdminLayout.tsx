@@ -42,6 +42,19 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isChecking, setIsChecking] = useState(true)
+
+  // Check if user is logged in
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem('isAdminLoggedIn')
+
+    if (isLoggedIn !== 'true') {
+      router.push('/admin/login')
+      return
+    }
+
+    setIsChecking(false)
+  }, [router])
 
   const handleLogout = () => {
     // Clear localStorage session
@@ -50,6 +63,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
     toast.success('Logged out successfully')
     router.push('/admin/login')
+  }
+
+  // Show loading while checking auth
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0a' }}>
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#FEBE03] border-r-transparent"></div>
+      </div>
+    )
   }
 
   return (
