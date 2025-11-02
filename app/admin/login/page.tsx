@@ -37,7 +37,7 @@ export default function LoginPage() {
 
     // Hardcoded credentials for single admin user
     const ADMIN_EMAIL = 'admin@sunsethaven.com'
-    const ADMIN_PASSWORD = 'SunsetHaven2024!'
+    const ADMIN_PASSWORD = 'SunsetHaven2024!@@'
 
     if (!email || !password) {
       toast.error('Please enter both email and password')
@@ -106,7 +106,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@sunsethaven.com"
+                placeholder="Enter your email"
                 className="mt-1 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
                 disabled={loading}
                 autoFocus
@@ -121,7 +121,7 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   className="mt-1 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500 pr-10"
                   disabled={loading}
                 />
