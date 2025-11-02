@@ -3,6 +3,7 @@
 import { ReactNode, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import Script from "next/script"
 import {
   LayoutDashboard,
   Inbox,
@@ -53,8 +54,20 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#0a0a0a' }}>
-      {/* Mobile sidebar */}
+    <>
+      {/* Microsoft Clarity Analytics for Admin */}
+      <Script id="clarity-admin-script" strategy="afterInteractive">
+        {`
+          (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+          })(window, document, "clarity", "script", "tzmsioibjm");
+        `}
+      </Script>
+
+      <div className="min-h-screen" style={{ background: '#0a0a0a' }}>
+        {/* Mobile sidebar */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="fixed inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
@@ -177,6 +190,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           },
         }}
       />
-    </div>
+      </div>
+    </>
   )
 }

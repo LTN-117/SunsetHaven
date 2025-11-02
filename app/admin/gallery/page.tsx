@@ -1,8 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import AdminLayout from "@/components/admin/AdminLayout"
 import { supabase } from "@/lib/supabase"
+import { getAdminProfile, getUserPermissions } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,7 +15,18 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import {
   Select,
   SelectContent,
@@ -21,7 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Trash2, Eye, EyeOff, GripVertical, Star } from "lucide-react"
+import { Plus, Trash2, Eye, EyeOff, GripVertical, Star, Loader2 } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
 
@@ -40,11 +53,15 @@ interface GalleryImage {
 }
 
 export default function GalleryPage() {
+  const router = useRouter()
   const [images, setImages] = useState<GalleryImage[]>([])
   const [filteredImages, setFilteredImages] = useState<GalleryImage[]>([])
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [imageToDelete, setImageToDelete] = useState<string | null>(null)
+  const [permissions, setPermissions] = useState<any>(null)
   const [newImage, setNewImage] = useState({
     image_url: '',
     caption: '',
@@ -55,14 +72,38 @@ export default function GalleryPage() {
   })
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string>('')
+  const [isAdding, setIsAdding] = useState(false)
 
   useEffect(() => {
-    loadImages()
+    checkPermissionsAndLoad()
   }, [])
 
   useEffect(() => {
     filterImages()
   }, [images, categoryFilter])
+
+  async function checkPermissionsAndLoad() {
+    try {
+      const profile = await getAdminProfile()
+      if (!profile) {
+        router.push('/admin/login')
+        return
+      }
+
+      const perms = await getUserPermissions('gallery')
+      if (!perms || !perms.can_view) {
+        toast.error('You do not have permission to view gallery')
+        router.push('/admin')
+        return
+      }
+      setPermissions(perms)
+
+      await loadImages()
+    } catch (error) {
+      console.error('Error checking permissions:', error)
+      router.push('/admin')
+    }
+  }
 
   async function loadImages() {
     try {
@@ -110,11 +151,17 @@ export default function GalleryPage() {
   }
 
   async function addImage() {
+    if (!permissions?.can_create) {
+      toast.error('You do not have permission to add images')
+      return
+    }
+
     if (!uploadedFile && !newImage.image_url) {
       toast.error('Please upload an image or enter an image URL')
       return
     }
 
+    setIsAdding(true)
     try {
       let imageUrl = newImage.image_url
 
@@ -144,6 +191,22 @@ export default function GalleryPage() {
         imageUrl = publicUrl
       }
 
+      // If tagging with a "What We've Built" tag, auto-reassign the existing tagged image
+      const whatWeveBuiltTags = ['bespoke-events', 'curated-networking', 'adventure-activities', 'premium-camping']
+      if (newImage.tag && whatWeveBuiltTags.includes(newImage.tag)) {
+        // Find existing image with this tag
+        const existingTaggedImage = images.find(img => img.tag === newImage.tag)
+        if (existingTaggedImage) {
+          // Auto-reassign to gallery
+          await supabase
+            .from('gallery_images')
+            .update({ tag: null, show_in_gallery: true, show_in_hero: false })
+            .eq('id', existingTaggedImage.id)
+
+          toast.info(`Previous "${newImage.tag}" image reassigned to gallery`)
+        }
+      }
+
       const maxOrder = images.length > 0
         ? Math.max(...images.map(img => img.display_order))
         : -1
@@ -164,9 +227,8 @@ export default function GalleryPage() {
 
       if (error) throw error
 
-      if (data) {
-        setImages([...images, data[0]])
-      }
+      // Reload all images to reflect changes
+      await loadImages()
 
       // Reset form
       setNewImage({
@@ -184,22 +246,35 @@ export default function GalleryPage() {
     } catch (error: any) {
       console.error('Error adding image:', error)
       toast.error(error.message || 'Failed to add image. Please try again.')
+    } finally {
+      setIsAdding(false)
     }
   }
 
-  async function deleteImage(id: string) {
-    if (!confirm('Are you sure you want to delete this image?')) return
+  function confirmDelete(id: string) {
+    if (!permissions?.can_delete) {
+      toast.error('You do not have permission to delete images')
+      return
+    }
+    setImageToDelete(id)
+    setDeleteDialogOpen(true)
+  }
+
+  async function deleteImage() {
+    if (!imageToDelete) return
 
     try {
       const { error } = await supabase
         .from('gallery_images')
         .delete()
-        .eq('id', id)
+        .eq('id', imageToDelete)
 
       if (error) throw error
 
-      setImages(prev => prev.filter(img => img.id !== id))
+      setImages(prev => prev.filter(img => img.id !== imageToDelete))
       toast.success('Image deleted successfully!')
+      setDeleteDialogOpen(false)
+      setImageToDelete(null)
     } catch (error) {
       console.error('Error deleting image:', error)
       toast.error('Failed to delete image. Please try again.')
@@ -207,6 +282,11 @@ export default function GalleryPage() {
   }
 
   async function toggleActive(id: string, currentStatus: boolean) {
+    if (!permissions?.can_edit) {
+      toast.error('You do not have permission to edit images')
+      return
+    }
+
     try {
       const { error } = await supabase
         .from('gallery_images')
@@ -224,6 +304,11 @@ export default function GalleryPage() {
   }
 
   async function toggleHero(id: string, currentStatus: boolean) {
+    if (!permissions?.can_edit) {
+      toast.error('You do not have permission to edit images')
+      return
+    }
+
     try {
       const { error } = await supabase
         .from('gallery_images')
@@ -288,6 +373,7 @@ export default function GalleryPage() {
           <Button
             onClick={() => setDialogOpen(true)}
             className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-black hover:opacity-90"
+            disabled={!permissions?.can_create}
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Image
@@ -330,6 +416,7 @@ export default function GalleryPage() {
                         onClick={() => toggleHero(image.id, image.show_in_hero)}
                         className={`${image.show_in_hero ? 'bg-yellow-500/30 hover:bg-yellow-500/40' : 'bg-white/20 hover:bg-white/30'} text-white`}
                         title={image.show_in_hero ? "Remove from hero" : "Add to hero"}
+                        disabled={!permissions?.can_edit}
                       >
                         <Star className={`h-4 w-4 ${image.show_in_hero ? 'fill-yellow-400 text-yellow-400' : ''}`} />
                       </Button>
@@ -338,14 +425,16 @@ export default function GalleryPage() {
                         size="icon"
                         onClick={() => toggleActive(image.id, image.is_active)}
                         className="bg-white/20 hover:bg-white/30 text-white"
+                        disabled={!permissions?.can_edit}
                       >
                         {image.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => deleteImage(image.id)}
+                        onClick={() => confirmDelete(image.id)}
                         className="bg-red-500/20 hover:bg-red-500/30 text-red-400"
+                        disabled={!permissions?.can_delete}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -536,13 +625,44 @@ export default function GalleryPage() {
                 <Button
                   onClick={addImage}
                   className="flex-1 bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-black hover:opacity-90"
+                  disabled={isAdding}
                 >
-                  Add Image
+                  {isAdding ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    'Add Image'
+                  )}
                 </Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent className="bg-[#1a1a1a] border-gray-800 text-white">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Image?</AlertDialogTitle>
+              <AlertDialogDescription className="text-gray-400">
+                Are you sure you want to delete this image? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={deleteImage}
+                className="bg-red-600 text-white hover:bg-red-700"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   )

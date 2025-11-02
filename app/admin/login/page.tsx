@@ -41,7 +41,6 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Form submitted!')
 
     if (!email || !password) {
       toast.error('Please enter both email and password')
@@ -49,16 +48,13 @@ export default function LoginPage() {
     }
 
     setLoading(true)
-    console.log('Attempting login for:', email)
 
     try {
       const result = await signIn(email, password)
-      console.log('Login successful:', result)
       toast.success('Welcome back!')
 
       // Use window.location for full page reload to ensure session cookie is set
       setTimeout(() => {
-        console.log('Redirecting to /admin')
         window.location.href = '/admin'
       }, 500)
     } catch (error: any) {

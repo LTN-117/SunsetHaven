@@ -1,8 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import AdminLayout from "@/components/admin/AdminLayout"
 import { supabase } from "@/lib/supabase"
+import { getAdminProfile, getUserPermissions } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -45,10 +47,12 @@ interface Event {
 }
 
 export default function EventsPage() {
+  const router = useRouter()
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [permissions, setPermissions] = useState<any>(null)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -61,8 +65,31 @@ export default function EventsPage() {
   const [flierPreview, setFlierPreview] = useState<string>('')
 
   useEffect(() => {
-    loadEvents()
+    checkPermissionsAndLoad()
   }, [])
+
+  async function checkPermissionsAndLoad() {
+    try {
+      const profile = await getAdminProfile()
+      if (!profile) {
+        router.push('/admin/login')
+        return
+      }
+
+      const perms = await getUserPermissions('events')
+      if (!perms || !perms.can_view) {
+        toast.error('You do not have permission to view events')
+        router.push('/admin')
+        return
+      }
+      setPermissions(perms)
+
+      await loadEvents()
+    } catch (error) {
+      console.error('Error checking permissions:', error)
+      router.push('/admin')
+    }
+  }
 
   async function loadEvents() {
     try {
@@ -145,6 +172,15 @@ export default function EventsPage() {
   }
 
   async function saveEvent() {
+    if (editingId && !permissions?.can_edit) {
+      toast.error('You do not have permission to edit events')
+      return
+    }
+    if (!editingId && !permissions?.can_create) {
+      toast.error('You do not have permission to create events')
+      return
+    }
+
     if (!formData.title || !formData.description || !formData.event_date || !formData.flier_url) {
       toast.error('Please fill in all required fields')
       return
@@ -234,6 +270,11 @@ export default function EventsPage() {
   }
 
   async function deleteEvent(id: string) {
+    if (!permissions?.can_delete) {
+      toast.error('You do not have permission to delete events')
+      return
+    }
+
     if (!confirm('Are you sure you want to delete this event?')) return
 
     try {
@@ -253,6 +294,11 @@ export default function EventsPage() {
   }
 
   async function toggleActive(id: string, currentStatus: boolean) {
+    if (!permissions?.can_edit) {
+      toast.error('You do not have permission to edit events')
+      return
+    }
+
     try {
       const { error } = await supabase
         .from('events')
@@ -317,6 +363,7 @@ export default function EventsPage() {
           <Button
             onClick={() => openDialog()}
             className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-black hover:opacity-90"
+            disabled={!permissions?.can_create}
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Event
@@ -380,6 +427,7 @@ export default function EventsPage() {
                         size="sm"
                         onClick={() => openDialog(event)}
                         className="border-gray-700 text-black bg-white hover:bg-gray-100"
+                        disabled={!permissions?.can_edit}
                       >
                         <Edit className="h-3 w-3 mr-1" />
                         Edit
@@ -389,6 +437,7 @@ export default function EventsPage() {
                         size="sm"
                         onClick={() => toggleActive(event.id, event.is_active)}
                         className="border-gray-700 text-black bg-white hover:bg-gray-100"
+                        disabled={!permissions?.can_edit}
                       >
                         {event.is_active ? (
                           <>
@@ -407,6 +456,7 @@ export default function EventsPage() {
                         size="sm"
                         onClick={() => deleteEvent(event.id)}
                         className="border-red-900 text-red-400 hover:bg-red-900/20"
+                        disabled={!permissions?.can_delete}
                       >
                         <Trash2 className="h-3 w-3 mr-1" />
                         Delete

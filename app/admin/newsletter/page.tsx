@@ -1,8 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import AdminLayout from "@/components/admin/AdminLayout"
 import { supabase } from "@/lib/supabase"
+import { getAdminProfile, getUserPermissions } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -21,12 +23,37 @@ interface NewsletterSignup {
 }
 
 export default function NewsletterPage() {
+  const router = useRouter()
   const [signups, setSignups] = useState<NewsletterSignup[]>([])
   const [loading, setLoading] = useState(true)
+  const [permissions, setPermissions] = useState<any>(null)
 
   useEffect(() => {
-    loadSignups()
+    checkPermissionsAndLoad()
   }, [])
+
+  async function checkPermissionsAndLoad() {
+    try {
+      const profile = await getAdminProfile()
+      if (!profile) {
+        router.push('/admin/login')
+        return
+      }
+
+      const perms = await getUserPermissions('newsletter')
+      if (!perms || !perms.can_view) {
+        toast.error('You do not have permission to view newsletter')
+        router.push('/admin')
+        return
+      }
+      setPermissions(perms)
+
+      await loadSignups()
+    } catch (error) {
+      console.error('Error checking permissions:', error)
+      router.push('/admin')
+    }
+  }
 
   async function loadSignups() {
     try {
@@ -47,6 +74,11 @@ export default function NewsletterPage() {
   }
 
   async function deleteSignup(id: string) {
+    if (!permissions?.can_delete) {
+      toast.error('You do not have permission to delete newsletter signups')
+      return
+    }
+
     if (!confirm('Are you sure you want to remove this email from the newsletter list?')) {
       return
     }
@@ -160,7 +192,7 @@ export default function NewsletterPage() {
           <Button
             onClick={exportToCSV}
             className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-black hover:opacity-90"
-            disabled={signups.length === 0}
+            disabled={signups.length === 0 || !permissions?.can_view}
           >
             <Download className="h-4 w-4 mr-2" />
             Export to CSV
@@ -169,7 +201,7 @@ export default function NewsletterPage() {
             onClick={copyAllEmails}
             variant="outline"
             className="border-gray-700 text-white hover:bg-gray-800"
-            disabled={signups.length === 0}
+            disabled={signups.length === 0 || !permissions?.can_view}
           >
             <Mail className="h-4 w-4 mr-2" />
             Copy All Emails
@@ -222,6 +254,7 @@ export default function NewsletterPage() {
                         size="sm"
                         onClick={() => deleteSignup(signup.id)}
                         className="border-red-900 text-red-400 hover:bg-red-900/20"
+                        disabled={!permissions?.can_delete}
                       >
                         <Trash2 className="h-3 w-3 mr-1" />
                         Remove

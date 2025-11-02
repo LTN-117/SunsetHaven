@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react"
+import { Menu, X, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -46,6 +46,7 @@ export default function SunsetHavenResort() {
   const [eventSlide, setEventSlide] = useState(0)
   const [newsletterEmail, setNewsletterEmail] = useState("")
   const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "success" | "error">("idle")
+  const [isSubmittingNewsletter, setIsSubmittingNewsletter] = useState(false)
 
   // Load hero images from database
   useEffect(() => {
@@ -256,6 +257,7 @@ export default function SunsetHavenResort() {
       return
     }
 
+    setIsSubmittingNewsletter(true)
     try {
       const { error } = await supabase
         .from("event_newsletter_signups")
@@ -278,6 +280,8 @@ export default function SunsetHavenResort() {
       console.error("Error subscribing to newsletter:", error)
       setNewsletterStatus("error")
       setTimeout(() => setNewsletterStatus("idle"), 5000)
+    } finally {
+      setIsSubmittingNewsletter(false)
     }
   }
 
@@ -606,8 +610,16 @@ export default function SunsetHavenResort() {
                   <Button
                     type="submit"
                     className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-white hover:opacity-90 px-8"
+                    disabled={isSubmittingNewsletter}
                   >
-                    Notify Me
+                    {isSubmittingNewsletter ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      'Notify Me'
+                    )}
                   </Button>
                 </div>
 
@@ -1344,7 +1356,14 @@ export default function SunsetHavenResort() {
                   style={{ background: 'linear-gradient(135deg, #FF3F02 0%, #FEBE03 100%)' }}
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Sending..." : "Send"}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    "Send"
+                  )}
                 </Button>
               </form>
             </div>

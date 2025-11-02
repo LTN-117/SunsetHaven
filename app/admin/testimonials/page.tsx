@@ -1,8 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import AdminLayout from "@/components/admin/AdminLayout"
 import { supabase } from "@/lib/supabase"
+import { getAdminProfile, getUserPermissions } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,7 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Plus, Trash2, Eye, EyeOff, Edit, Quote } from "lucide-react"
+import { Plus, Trash2, Eye, EyeOff, Edit, Quote, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
 interface Testimonial {
@@ -35,10 +37,13 @@ interface Testimonial {
 }
 
 export default function TestimonialsPage() {
+  const router = useRouter()
   const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [permissions, setPermissions] = useState<any>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const [formData, setFormData] = useState({
     guest_name: '',
     quote: '',
@@ -46,8 +51,31 @@ export default function TestimonialsPage() {
   })
 
   useEffect(() => {
-    loadTestimonials()
+    checkPermissionsAndLoad()
   }, [])
+
+  async function checkPermissionsAndLoad() {
+    try {
+      const profile = await getAdminProfile()
+      if (!profile) {
+        router.push('/admin/login')
+        return
+      }
+
+      const perms = await getUserPermissions('testimonials')
+      if (!perms || !perms.can_view) {
+        toast.error('You do not have permission to view testimonials')
+        router.push('/admin')
+        return
+      }
+      setPermissions(perms)
+
+      await loadTestimonials()
+    } catch (error) {
+      console.error('Error checking permissions:', error)
+      router.push('/admin')
+    }
+  }
 
   async function loadTestimonials() {
     try {
@@ -85,11 +113,21 @@ export default function TestimonialsPage() {
   }
 
   async function saveTestimonial() {
+    if (editingId && !permissions?.can_edit) {
+      toast.error('You do not have permission to edit testimonials')
+      return
+    }
+    if (!editingId && !permissions?.can_create) {
+      toast.error('You do not have permission to create testimonials')
+      return
+    }
+
     if (!formData.guest_name || !formData.quote) {
       toast.error('Please fill in name and quote')
       return
     }
 
+    setIsSaving(true)
     try {
       if (editingId) {
         // Update existing
@@ -139,10 +177,17 @@ export default function TestimonialsPage() {
     } catch (error) {
       console.error('Error saving testimonial:', error)
       toast.error('Failed to save testimonial. Please try again.')
+    } finally {
+      setIsSaving(false)
     }
   }
 
   async function deleteTestimonial(id: string) {
+    if (!permissions?.can_delete) {
+      toast.error('You do not have permission to delete testimonials')
+      return
+    }
+
     if (!confirm('Are you sure you want to delete this testimonial?')) return
 
     try {
@@ -161,6 +206,11 @@ export default function TestimonialsPage() {
   }
 
   async function toggleActive(id: string, currentStatus: boolean) {
+    if (!permissions?.can_edit) {
+      toast.error('You do not have permission to edit testimonials')
+      return
+    }
+
     try {
       const { error } = await supabase
         .from('testimonials')
@@ -207,6 +257,7 @@ export default function TestimonialsPage() {
           <Button
             onClick={() => openDialog()}
             className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-black hover:opacity-90"
+            disabled={!permissions?.can_create}
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Testimonial
@@ -266,6 +317,7 @@ export default function TestimonialsPage() {
                           size="sm"
                           onClick={() => openDialog(testimonial)}
                           className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                          disabled={!permissions?.can_edit}
                         >
                           <Edit className="h-3 w-3 mr-1" />
                           Edit
@@ -275,6 +327,7 @@ export default function TestimonialsPage() {
                           size="sm"
                           onClick={() => toggleActive(testimonial.id, testimonial.is_active)}
                           className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                          disabled={!permissions?.can_edit}
                         >
                           {testimonial.is_active ? (
                             <>
@@ -293,6 +346,7 @@ export default function TestimonialsPage() {
                           size="sm"
                           onClick={() => deleteTestimonial(testimonial.id)}
                           className="border-red-900 text-red-400 hover:bg-red-900/20"
+                          disabled={!permissions?.can_delete}
                         >
                           <Trash2 className="h-3 w-3 mr-1" />
                           Delete
@@ -373,8 +427,16 @@ export default function TestimonialsPage() {
                 <Button
                   onClick={saveTestimonial}
                   className="flex-1 bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-black hover:opacity-90"
+                  disabled={isSaving}
                 >
-                  {editingId ? 'Update' : 'Add'} Testimonial
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {editingId ? 'Updating...' : 'Adding...'}
+                    </>
+                  ) : (
+                    <>{editingId ? 'Update' : 'Add'} Testimonial</>
+                  )}
                 </Button>
               </div>
             </div>

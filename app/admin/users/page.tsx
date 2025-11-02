@@ -176,17 +176,33 @@ export default function UsersPage() {
           return
         }
 
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-          email: formData.email,
-          password: formData.password,
-          email_confirm: true,
-          user_metadata: {
+        // Get the current session token
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+          toast.error('You must be logged in to create users')
+          return
+        }
+
+        // Call API route to create user (requires service role key)
+        const response = await fetch('/api/admin/create-user', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
             full_name: formData.full_name,
             role: formData.role
-          }
+          })
         })
 
-        if (authError) throw authError
+        const result = await response.json()
+
+        if (!response.ok) {
+          throw new Error(result.message || 'Failed to create user')
+        }
 
         toast.success('User created successfully')
       }
