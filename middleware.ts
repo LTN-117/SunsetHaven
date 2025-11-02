@@ -119,6 +119,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: [],  // Temporarily disabled for testing
-  // matcher: '/admin/:path*',  // Re-enable this after testing
+  matcher: ['/admin/:path*'],
 }
