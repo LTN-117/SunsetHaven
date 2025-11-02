@@ -34,7 +34,7 @@ const navigation = [
   { name: "Events", href: "/admin/events", icon: Calendar },
   { name: "Newsletter", href: "/admin/newsletter", icon: Mail },
   { name: "Testimonials", href: "/admin/testimonials", icon: MessageSquare },
-  { name: "Users", href: "/admin/users", icon: Users },
+  // { name: "Users", href: "/admin/users", icon: Users }, // Removed - using single admin
   { name: "Footer Settings", href: "/admin/footer", icon: Settings },
 ]
 
@@ -43,15 +43,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const handleLogout = async () => {
-    try {
-      await signOut()
-      toast.success('Logged out successfully')
-      router.push('/admin/login')
-    } catch (error) {
-      console.error('Logout error:', error)
-      toast.error('Failed to logout')
-    }
+  const handleLogout = () => {
+    // Clear localStorage session
+    localStorage.removeItem('isAdminLoggedIn')
+    localStorage.removeItem('adminEmail')
+
+    toast.success('Logged out successfully')
+    router.push('/admin/login')
   }
 
   return (

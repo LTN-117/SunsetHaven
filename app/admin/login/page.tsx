@@ -35,24 +35,37 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Hardcoded credentials for single admin user
+    const ADMIN_EMAIL = 'admin@sunsethaven.com'
+    const ADMIN_PASSWORD = 'SunsetHaven2024!'
+
     if (!email || !password) {
       toast.error('Please enter both email and password')
+      return
+    }
+
+    // Simple credential check
+    if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
+      toast.error('Invalid email or password')
       return
     }
 
     setLoading(true)
 
     try {
-      const result = await signIn(email, password)
+      // Set a simple session flag in localStorage
+      localStorage.setItem('isAdminLoggedIn', 'true')
+      localStorage.setItem('adminEmail', ADMIN_EMAIL)
+
       toast.success('Welcome back!')
 
-      // Use window.location for full page reload to ensure session cookie is set
+      // Redirect to admin dashboard
       setTimeout(() => {
         window.location.href = '/admin'
       }, 500)
     } catch (error: any) {
       console.error('Login error:', error)
-      toast.error(error.message || 'Invalid credentials')
+      toast.error('Login failed')
       setLoading(false)
     }
   }
