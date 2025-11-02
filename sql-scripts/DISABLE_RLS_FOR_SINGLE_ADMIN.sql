@@ -9,7 +9,7 @@ ALTER TABLE IF EXISTS inquiries DISABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS events DISABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS gallery_images DISABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS testimonials DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS newsletter_signups DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS event_newsletter_signups DISABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS footer_settings DISABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS experiences DISABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS admin_profiles DISABLE ROW LEVEL SECURITY;
@@ -33,8 +33,8 @@ DROP POLICY IF EXISTS "Allow authenticated users to manage testimonials" ON test
 DROP POLICY IF EXISTS "Allow authenticated users to view inquiries" ON inquiries;
 DROP POLICY IF EXISTS "Allow authenticated users to manage inquiries" ON inquiries;
 
-DROP POLICY IF EXISTS "Allow public to signup for newsletter" ON newsletter_signups;
-DROP POLICY IF EXISTS "Allow authenticated users to manage newsletter" ON newsletter_signups;
+DROP POLICY IF EXISTS "Allow public to signup for newsletter" ON event_newsletter_signups;
+DROP POLICY IF EXISTS "Allow authenticated users to manage newsletter" ON event_newsletter_signups;
 
 DROP POLICY IF EXISTS "Allow public read access to footer settings" ON footer_settings;
 DROP POLICY IF EXISTS "Allow authenticated users to manage footer settings" ON footer_settings;
