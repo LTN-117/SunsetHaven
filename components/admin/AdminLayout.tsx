@@ -54,7 +54,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <>
+    <div className="min-h-screen" style={{ background: '#0a0a0a' }}>
       {/* Microsoft Clarity Analytics for Admin */}
       <Script id="clarity-admin-script" strategy="afterInteractive">
         {`
@@ -65,8 +65,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           })(window, document, "clarity", "script", "tzmsioibjm");
         `}
       </Script>
-
-      <div className="min-h-screen" style={{ background: '#0a0a0a' }}>
         {/* Mobile sidebar */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
@@ -190,7 +188,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           },
         }}
       />
-      </div>
-    </>
+    </div>
   )
 }

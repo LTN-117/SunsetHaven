@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import Image from "next/image"
 import { Menu, X, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -436,7 +437,14 @@ export default function SunsetHavenResort() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
+              <Image
+                src="/sunset-haven-logo.png"
+                alt="Sunset Haven Logo"
+                width={48}
+                height={48}
+                className="rounded-lg"
+              />
               <span className="font-bold text-xl">Sunset Haven</span>
             </div>
 
