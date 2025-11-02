@@ -61,7 +61,7 @@ export default function LoginPage() {
 
       // Redirect to admin dashboard
       setTimeout(() => {
-        window.location.href = '/admin'
+        router.push('/admin')
       }, 500)
     } catch (error: any) {
       console.error('Login error:', error)
