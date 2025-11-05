@@ -881,7 +881,7 @@ export default function SunsetHavenResort() {
             When you stay with us, you're directly supporting island economic development
           </p>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Stat 1 */}
             <div className="text-center p-8 rounded-3xl border border-gray-800" style={{
               background: 'rgba(20, 20, 30, 0.5)',
@@ -921,20 +921,6 @@ export default function SunsetHavenResort() {
               <h3 className="text-xl font-bold text-white mb-2">Goods Sourced Locally</h3>
               <p className="text-gray-400">
                 Supporting island artisans and businesses
-              </p>
-            </div>
-
-            {/* Stat 4 */}
-            <div className="text-center p-8 rounded-3xl border border-gray-800" style={{
-              background: 'rgba(20, 20, 30, 0.5)',
-              backdropFilter: 'blur(10px)'
-            }}>
-              <div className="text-6xl font-bold mb-4" style={{ background: 'linear-gradient(135deg, #FF3F02 0%, #FEBE03 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                30%
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">Carbon Reduction</h3>
-              <p className="text-gray-400">
-                Compared to traditional resort locations
               </p>
             </div>
           </div>
