@@ -861,7 +861,7 @@ export default function SunsetHavenResort() {
               </div>
               <div className="bg-white/10 rounded-3xl p-8">
                 <p className="text-xl font-bold leading-relaxed opacity-95">
-                  Nigeria's first eco-tourism resort designed around experience, not just accommodation.
+                  Nigeria's first eco-tourism camping site designed around experience, not just accommodation.
                 </p>
               </div>
             </div>
