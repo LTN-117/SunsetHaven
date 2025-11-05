@@ -17,6 +17,14 @@ const nextConfig = {
     ],
     // Set to false for better performance with optimized images
     unoptimized: false,
+    // Format optimization for better compression
+    formats: ['image/webp'],
+    // Device sizes for responsive images
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    // Image sizes for different use cases
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Minimize layout shift
+    minimumCacheTTL: 60,
   },
 
   // Security headers

@@ -329,7 +329,7 @@ export default function SunsetHavenResort() {
     {
       title: "Premium Camping",
       description:
-        "Proper beds with duvets and blankets in premium tents. Wake up to stunning island views and the sound of waves. Comfort meets nature in the perfect balance.",
+        "Experience our eco-tourism camping site with proper beds, duvets and blankets in premium tents. Wake up to stunning island views and the sound of waves. Comfort meets nature in the perfect balance.",
       image: "/premium-camping.jpg",
       tag: "premium-camping"
     },
@@ -341,18 +341,18 @@ export default function SunsetHavenResort() {
       tag: "adventure-activities"
     },
     {
-      title: "Curated Networking",
-      description:
-        "Join 600-1000+ monthly guests who return for the community. Connect with professionals, creatives, and explorers. Build relationships that last beyond your stay.",
-      image: "/curated-networking.jpg",
-      tag: "curated-networking"
-    },
-    {
       title: "Bespoke Events",
       description:
         "From corporate retreats to themed celebrations, raves to intimate gatherings. We coordinate unforgettable experiences tailored to your vision.",
       image: "/bespoke-events.jpg",
       tag: "bespoke-events"
+    },
+    {
+      title: "Curated Networking",
+      description:
+        "Join 600-1000+ monthly guests who return for the community. Connect with professionals, creatives, and explorers. Build relationships that last beyond your stay.",
+      image: "/curated-networking.jpg",
+      tag: "curated-networking"
     },
   ])
 
@@ -528,10 +528,13 @@ export default function SunsetHavenResort() {
                 >
                   {heroImages.map((image, index) => (
                     <div key={index} className="min-w-full h-full">
-                      <img
+                      <Image
                         src={image}
                         alt={`Sunset Haven Resort ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
+                        priority={index === 0}
+                        sizes="(max-width: 768px) 100vw, 50vw"
                       />
                     </div>
                   ))}
@@ -652,10 +655,12 @@ export default function SunsetHavenResort() {
               <div className="grid md:grid-cols-2 gap-0">
                 {/* Event Flier */}
                 <div className="relative h-96 md:h-auto">
-                  <img
+                  <Image
                     src={events[0].flier_url}
                     alt={events[0].title}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 </div>
 
@@ -721,10 +726,12 @@ export default function SunsetHavenResort() {
                 <div className="grid md:grid-cols-2 gap-0">
                   {/* Event Flier */}
                   <div className="relative h-96 md:h-auto">
-                    <img
+                    <Image
                       src={events[eventSlide].flier_url}
                       alt={events[eventSlide].title}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
                     />
                   </div>
 
@@ -849,7 +856,7 @@ export default function SunsetHavenResort() {
                   Our pop-ups kept selling out. People weren't just coming once, they were bringing friends, requesting longer stays, asking for workspace options. The demand outgrew our pop-up model.
                 </p>
                 <p className="text-lg leading-relaxed opacity-95">
-                  Instead of chasing venues, we'd create our own dedicated space. Somewhere purpose-built for the community we'd discovered.
+                  Instead of chasing venues, We created our own dedicated space. Somewhere purpose-built for the community we'd discovered.
                 </p>
               </div>
               <div className="bg-white/10 rounded-3xl p-8">
@@ -967,10 +974,13 @@ export default function SunsetHavenResort() {
                 >
                   {/* Image */}
                   <div className={`relative h-96 md:h-auto ${index % 2 === 1 ? "md:order-2" : "md:order-1"}`}>
-                    <img
+                    <Image
                       src={experience.image || "/placeholder.svg"}
                       alt={experience.title}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      loading="lazy"
+                      sizes="(max-width: 768px) 100vw, 50vw"
                     />
                   </div>
 
@@ -1057,11 +1067,14 @@ export default function SunsetHavenResort() {
                     {galleryImages.slice(0, Math.ceil(galleryImages.length / 2)).map((image, index) => {
                       const widths = ['w-96', 'w-72', 'w-72', 'w-96', 'w-80', 'w-96']
                       return (
-                        <div key={image.id} className={`${widths[index % widths.length]} h-64`}>
-                          <img
+                        <div key={image.id} className={`relative ${widths[index % widths.length]} h-64`}>
+                          <Image
                             src={image.image_url}
                             alt={image.caption || 'Gallery image'}
-                            className="w-full h-full object-cover rounded-3xl"
+                            fill
+                            className="object-cover rounded-3xl"
+                            loading="lazy"
+                            sizes="(max-width: 768px) 50vw, 400px"
                           />
                         </div>
                       )
@@ -1073,11 +1086,14 @@ export default function SunsetHavenResort() {
                     {galleryImages.slice(Math.ceil(galleryImages.length / 2)).map((image, index) => {
                       const widths = ['w-72', 'w-72', 'w-96', 'w-72', 'w-80', 'w-96']
                       return (
-                        <div key={image.id} className={`${widths[index % widths.length]} h-64`}>
-                          <img
+                        <div key={image.id} className={`relative ${widths[index % widths.length]} h-64`}>
+                          <Image
                             src={image.image_url}
                             alt={image.caption || 'Gallery image'}
-                            className="w-full h-full object-cover rounded-3xl"
+                            fill
+                            className="object-cover rounded-3xl"
+                            loading="lazy"
+                            sizes="(max-width: 768px) 50vw, 400px"
                           />
                         </div>
                       )
@@ -1184,10 +1200,13 @@ export default function SunsetHavenResort() {
                     {/* Full Width Image Container with Floating Card */}
                     <div className="relative h-[600px] rounded-3xl overflow-hidden shadow-2xl">
                       {/* Background Image */}
-                      <img
+                      <Image
                         src="/IMG_8026.jpg"
                         alt="Guests enjoying Sunset Haven"
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
+                        loading="lazy"
+                        sizes="100vw"
                       />
 
                       {/* Dark Overlay for better text contrast */}

@@ -1,6 +1,6 @@
-# Custom Instructions for Claude Code
+# Custom Instructions for Claude
 
-**Use these instructions when working with Claude on any complex project to avoid cascading failures and frustration.**
+**READ THIS BEFORE EVERY TASK - THESE ARE CORE OPERATING PRINCIPLES**
 
 ---
 
