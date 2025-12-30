@@ -527,7 +527,7 @@ export default function SunsetHavenResort() {
                   style={{ transform: `translateX(-${heroImageSlide * 100}%)` }}
                 >
                   {heroImages.map((image, index) => (
-                    <div key={index} className="min-w-full h-full">
+                    <div key={index} className="relative min-w-full h-full">
                       <Image
                         src={image}
                         alt={`Sunset Haven Resort ${index + 1}`}
