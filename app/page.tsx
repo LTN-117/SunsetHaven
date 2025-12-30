@@ -503,7 +503,7 @@ export default function SunsetHavenResort() {
             {/* Static Text Content */}
             <div className="animate-slide-in-left">
               <h1 className="text-7xl md:text-8xl font-bold text-white mb-8 text-balance">Your Island Escape, Redefined</h1>
-              <p className="text-2xl md:text-3xl text-gray-300 mb-10 leading-relaxed">
+              <p className="text-lg md:text-xl text-gray-300 mb-10 leading-relaxed">
                 Where professionals, creatives, and explorers gather for experiences that matter. We blend luxury with sustainability, networking with adventure, work with play.
               </p>
               <Button
