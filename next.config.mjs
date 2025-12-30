@@ -17,14 +17,14 @@ const nextConfig = {
     ],
     // Set to false for better performance with optimized images
     unoptimized: false,
-    // Format optimization for better compression
-    formats: ['image/webp'],
+    // Format optimization for better compression (AVIF is smaller than WebP)
+    formats: ['image/avif', 'image/webp'],
     // Device sizes for responsive images
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     // Image sizes for different use cases
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    // Minimize layout shift
-    minimumCacheTTL: 60,
+    // Cache optimized images for 1 year (improves repeat load performance)
+    minimumCacheTTL: 31536000,
   },
 
   // Security headers
