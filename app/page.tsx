@@ -502,8 +502,8 @@ export default function SunsetHavenResort() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Static Text Content */}
             <div className="animate-slide-in-left">
-              <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 text-balance">Your Island Escape, Redefined</h1>
-              <p className="text-xl text-gray-300 mb-8 leading-relaxed">
+              <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 text-balance">Your Island Escape, Redefined</h1>
+              <p className="text-2xl text-gray-300 mb-8 leading-relaxed">
                 Where professionals, creatives, and explorers gather for experiences that matter. We blend luxury with sustainability, networking with adventure, work with play.
               </p>
               <Button
@@ -511,7 +511,7 @@ export default function SunsetHavenResort() {
                 onClick={() => {
                   document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
                 }}
-                className="text-white px-8 py-3 text-lg rounded-full hover:opacity-90 hover:scale-105 transition-all duration-300"
+                className="text-white px-10 py-4 text-xl rounded-full hover:opacity-90 hover:scale-105 transition-all duration-300"
                 style={{ background: 'linear-gradient(135deg, #FF3F02 0%, #FEBE03 100%)' }}
               >
                 Book Your Experience - Get Quote
@@ -519,7 +519,7 @@ export default function SunsetHavenResort() {
             </div>
 
             {/* Image Carousel - Only images change */}
-            <div className="relative h-96 md:h-full rounded-3xl overflow-hidden shadow-lg animate-slide-in-right">
+            <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-lg animate-slide-in-right">
               {/* Images Container */}
               <div className="relative w-full h-full">
                 <div
