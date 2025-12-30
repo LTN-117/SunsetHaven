@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import AdminLayout from "@/components/admin/AdminLayout"
-import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -60,12 +59,9 @@ export default function InquiriesPage() {
 
   async function loadInquiries() {
     try {
-      const { data, error } = await supabase
-        .from('inquiries')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
+      const response = await fetch('/api/admin/inquiries')
+      if (!response.ok) throw new Error('Failed to load inquiries')
+      const data = await response.json()
       setInquiries(data || [])
     } catch (error) {
       console.error('Error loading inquiries:', error)
@@ -84,12 +80,12 @@ export default function InquiriesPage() {
 
   async function updateStatus(id: string, newStatus: Inquiry['status']) {
     try {
-      const { error } = await supabase
-        .from('inquiries')
-        .update({ status: newStatus })
-        .eq('id', id)
-
-      if (error) throw error
+      const response = await fetch('/api/admin/inquiries', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: newStatus })
+      })
+      if (!response.ok) throw new Error('Failed to update status')
 
       // Update local state
       setInquiries(prev =>

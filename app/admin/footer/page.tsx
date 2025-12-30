@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import AdminLayout from "@/components/admin/AdminLayout"
-import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -37,12 +36,10 @@ export default function FooterSettingsPage() {
 
   async function loadSettings() {
     try {
-      const { data, error } = await supabase
-        .from('footer_settings')
-        .select('*')
-        .single()
+      const response = await fetch('/api/admin/footer')
+      if (!response.ok) throw new Error('Failed to load footer settings')
+      const data = await response.json()
 
-      if (error) throw error
       setSettings(data)
       if (data?.updated_at) {
         setLastSaved(new Date(data.updated_at))
@@ -59,9 +56,11 @@ export default function FooterSettingsPage() {
 
     setSaving(true)
     try {
-      const { error } = await supabase
-        .from('footer_settings')
-        .update({
+      const response = await fetch('/api/admin/footer', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: settings.id,
           email: settings.email,
           phone: settings.phone,
           address: settings.address,
@@ -73,9 +72,8 @@ export default function FooterSettingsPage() {
           copyright_text: settings.copyright_text,
           powered_by_text: settings.powered_by_text,
         })
-        .eq('id', settings.id)
-
-      if (error) throw error
+      })
+      if (!response.ok) throw new Error('Failed to save settings')
 
       setLastSaved(new Date())
       toast.success('Footer settings saved successfully!')

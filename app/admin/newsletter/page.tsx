@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import AdminLayout from "@/components/admin/AdminLayout"
-import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -30,12 +29,9 @@ export default function NewsletterPage() {
 
   async function loadSignups() {
     try {
-      const { data, error } = await supabase
-        .from('event_newsletter_signups')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
+      const response = await fetch('/api/admin/newsletter')
+      if (!response.ok) throw new Error('Failed to load signups')
+      const data = await response.json()
 
       setSignups(data || [])
     } catch (error) {
@@ -52,12 +48,10 @@ export default function NewsletterPage() {
     }
 
     try {
-      const { error } = await supabase
-        .from('event_newsletter_signups')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
+      const response = await fetch(`/api/admin/newsletter?id=${id}`, {
+        method: 'DELETE'
+      })
+      if (!response.ok) throw new Error('Failed to remove email')
 
       setSignups(prev => prev.filter(s => s.id !== id))
       toast.success('Email removed from newsletter list')

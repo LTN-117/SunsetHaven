@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import AdminLayout from "@/components/admin/AdminLayout"
-import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -52,12 +51,9 @@ export default function TestimonialsPage() {
 
   async function loadTestimonials() {
     try {
-      const { data, error } = await supabase
-        .from('testimonials')
-        .select('*')
-        .order('display_order', { ascending: true })
-
-      if (error) throw error
+      const response = await fetch('/api/admin/testimonials')
+      if (!response.ok) throw new Error('Failed to load testimonials')
+      const data = await response.json()
       setTestimonials(data || [])
     } catch (error) {
       console.error('Error loading testimonials:', error)
@@ -95,16 +91,17 @@ export default function TestimonialsPage() {
     try {
       if (editingId) {
         // Update existing
-        const { error } = await supabase
-          .from('testimonials')
-          .update({
+        const response = await fetch('/api/admin/testimonials', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: editingId,
             guest_name: formData.guest_name,
             quote: formData.quote,
             guest_role: formData.guest_role || null,
           })
-          .eq('id', editingId)
-
-        if (error) throw error
+        })
+        if (!response.ok) throw new Error('Failed to update testimonial')
 
         setTestimonials(prev =>
           prev.map(t => t.id === editingId
@@ -118,20 +115,21 @@ export default function TestimonialsPage() {
           ? Math.max(...testimonials.map(t => t.display_order))
           : -1
 
-        const { data, error } = await supabase
-          .from('testimonials')
-          .insert([{
+        const response = await fetch('/api/admin/testimonials', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
             ...formData,
             guest_role: formData.guest_role || null,
             display_order: maxOrder + 1,
             is_active: true
-          }])
-          .select()
-
-        if (error) throw error
+          })
+        })
+        if (!response.ok) throw new Error('Failed to create testimonial')
+        const data = await response.json()
 
         if (data) {
-          setTestimonials([...testimonials, data[0]])
+          setTestimonials([...testimonials, data])
         }
       }
 
@@ -150,12 +148,10 @@ export default function TestimonialsPage() {
     if (!confirm('Are you sure you want to delete this testimonial?')) return
 
     try {
-      const { error } = await supabase
-        .from('testimonials')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
+      const response = await fetch(`/api/admin/testimonials?id=${id}`, {
+        method: 'DELETE'
+      })
+      if (!response.ok) throw new Error('Failed to delete testimonial')
 
       setTestimonials(prev => prev.filter(t => t.id !== id))
     } catch (error) {
@@ -166,12 +162,12 @@ export default function TestimonialsPage() {
 
   async function toggleActive(id: string, currentStatus: boolean) {
     try {
-      const { error } = await supabase
-        .from('testimonials')
-        .update({ is_active: !currentStatus })
-        .eq('id', id)
-
-      if (error) throw error
+      const response = await fetch('/api/admin/testimonials', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, is_active: !currentStatus })
+      })
+      if (!response.ok) throw new Error('Failed to update status')
 
       setTestimonials(prev =>
         prev.map(t => t.id === id ? { ...t, is_active: !currentStatus } : t)

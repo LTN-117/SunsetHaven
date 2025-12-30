@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import AdminLayout from "@/components/admin/AdminLayout"
-import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -66,15 +65,12 @@ export default function EventsPage() {
 
   async function loadEvents() {
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .order('event_date', { ascending: false })
-
-      if (error) throw error
+      const response = await fetch('/api/admin/events')
+      if (!response.ok) throw new Error('Failed to load events')
+      const data = await response.json()
 
       // Parse pricing_tiers JSON for each event
-      const eventsWithParsedTiers = (data || []).map(event => ({
+      const eventsWithParsedTiers = (data || []).map((event: any) => ({
         ...event,
         pricing_tiers: event.pricing_tiers || []
       }))
@@ -163,9 +159,11 @@ export default function EventsPage() {
     try {
       if (editingId) {
         // Update existing event
-        const { error: eventError } = await supabase
-          .from('events')
-          .update({
+        const response = await fetch('/api/admin/events', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: editingId,
             title: formData.title,
             description: formData.description,
             event_date: formData.event_date,
@@ -174,9 +172,8 @@ export default function EventsPage() {
             flier_url: formData.flier_url,
             paystack_payment_url: formData.paystack_payment_url,
           })
-          .eq('id', editingId)
-
-        if (eventError) throw eventError
+        })
+        if (!response.ok) throw new Error('Failed to update event')
 
         setEvents(prev =>
           prev.map(e => e.id === editingId
@@ -191,9 +188,10 @@ export default function EventsPage() {
           ? Math.max(...events.map(e => e.display_order))
           : -1
 
-        const { data: newEvent, error: eventError } = await supabase
-          .from('events')
-          .insert([{
+        const response = await fetch('/api/admin/events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
             title: formData.title,
             description: formData.description,
             event_date: formData.event_date,
@@ -203,11 +201,10 @@ export default function EventsPage() {
             paystack_payment_url: formData.paystack_payment_url,
             display_order: maxOrder + 1,
             is_active: true
-          }])
-          .select()
-          .single()
-
-        if (eventError) throw eventError
+          })
+        })
+        if (!response.ok) throw new Error('Failed to create event')
+        const newEvent = await response.json()
 
         if (newEvent) {
           setEvents([{ ...newEvent, pricing_tiers: validTiers }, ...events])
@@ -237,12 +234,10 @@ export default function EventsPage() {
     if (!confirm('Are you sure you want to delete this event?')) return
 
     try {
-      const { error } = await supabase
-        .from('events')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
+      const response = await fetch(`/api/admin/events?id=${id}`, {
+        method: 'DELETE'
+      })
+      if (!response.ok) throw new Error('Failed to delete event')
 
       setEvents(prev => prev.filter(e => e.id !== id))
       toast.success('Event deleted successfully!')
@@ -254,12 +249,12 @@ export default function EventsPage() {
 
   async function toggleActive(id: string, currentStatus: boolean) {
     try {
-      const { error } = await supabase
-        .from('events')
-        .update({ is_active: !currentStatus })
-        .eq('id', id)
-
-      if (error) throw error
+      const response = await fetch('/api/admin/events', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, is_active: !currentStatus })
+      })
+      if (!response.ok) throw new Error('Failed to update status')
 
       setEvents(prev =>
         prev.map(e => e.id === id ? { ...e, is_active: !currentStatus } : e)

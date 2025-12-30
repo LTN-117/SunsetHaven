@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import AdminLayout from "@/components/admin/AdminLayout"
-import { supabase } from "@/lib/supabase"
+import { supabase } from "@/lib/supabase" // Keep for storage uploads only
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -80,12 +80,9 @@ export default function GalleryPage() {
 
   async function loadImages() {
     try {
-      const { data, error } = await supabase
-        .from('gallery_images')
-        .select('*')
-        .order('display_order', { ascending: true })
-
-      if (error) throw error
+      const response = await fetch('/api/admin/gallery')
+      if (!response.ok) throw new Error('Failed to load images')
+      const data = await response.json()
       setImages(data || [])
     } catch (error) {
       console.error('Error loading images:', error)
@@ -166,11 +163,11 @@ export default function GalleryPage() {
         const existingTaggedImage = images.find(img => img.tag === newImage.tag)
         if (existingTaggedImage) {
           // Auto-reassign to gallery
-          await supabase
-            .from('gallery_images')
-            .update({ tag: null, show_in_gallery: true, show_in_hero: false })
-            .eq('id', existingTaggedImage.id)
-
+          await fetch('/api/admin/gallery', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: existingTaggedImage.id, tag: null, show_in_gallery: true, show_in_hero: false })
+          })
           toast.info(`Previous "${newImage.tag}" image reassigned to gallery`)
         }
       }
@@ -179,9 +176,10 @@ export default function GalleryPage() {
         ? Math.max(...images.map(img => img.display_order))
         : -1
 
-      const { data, error } = await supabase
-        .from('gallery_images')
-        .insert([{
+      const response = await fetch('/api/admin/gallery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           image_url: imageUrl,
           caption: newImage.caption,
           category: newImage.category,
@@ -190,10 +188,10 @@ export default function GalleryPage() {
           is_active: true,
           show_in_hero: newImage.show_in_hero,
           show_in_gallery: newImage.show_in_gallery
-        }])
-        .select()
+        })
+      })
 
-      if (error) throw error
+      if (!response.ok) throw new Error('Failed to add image')
 
       // Reload all images to reflect changes
       await loadImages()
@@ -228,12 +226,10 @@ export default function GalleryPage() {
     if (!imageToDelete) return
 
     try {
-      const { error } = await supabase
-        .from('gallery_images')
-        .delete()
-        .eq('id', imageToDelete)
-
-      if (error) throw error
+      const response = await fetch(`/api/admin/gallery?id=${imageToDelete}`, {
+        method: 'DELETE'
+      })
+      if (!response.ok) throw new Error('Failed to delete image')
 
       setImages(prev => prev.filter(img => img.id !== imageToDelete))
       toast.success('Image deleted successfully!')
@@ -247,12 +243,12 @@ export default function GalleryPage() {
 
   async function toggleActive(id: string, currentStatus: boolean) {
     try {
-      const { error } = await supabase
-        .from('gallery_images')
-        .update({ is_active: !currentStatus })
-        .eq('id', id)
-
-      if (error) throw error
+      const response = await fetch('/api/admin/gallery', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, is_active: !currentStatus })
+      })
+      if (!response.ok) throw new Error('Failed to update status')
 
       setImages(prev =>
         prev.map(img => img.id === id ? { ...img, is_active: !currentStatus } : img)
@@ -264,12 +260,12 @@ export default function GalleryPage() {
 
   async function toggleHero(id: string, currentStatus: boolean) {
     try {
-      const { error } = await supabase
-        .from('gallery_images')
-        .update({ show_in_hero: !currentStatus })
-        .eq('id', id)
-
-      if (error) throw error
+      const response = await fetch('/api/admin/gallery', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, show_in_hero: !currentStatus })
+      })
+      if (!response.ok) throw new Error('Failed to update status')
 
       setImages(prev =>
         prev.map(img => img.id === id ? { ...img, show_in_hero: !currentStatus } : img)
