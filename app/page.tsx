@@ -486,7 +486,7 @@ export default function SunsetHavenResort() {
         )}
       </nav>
 
-      <section className="scroll-section neon-border relative pt-20 pb-20 rounded-3xl overflow-hidden" style={{
+      <section className="scroll-section neon-border relative pt-20 pb-20 min-h-[75vh] rounded-3xl overflow-hidden" style={{
         '--section-bg': 'linear-gradient(135deg, rgba(10, 10, 10, 0.95) 0%, rgba(20, 20, 30, 0.95) 100%)',
         background: 'linear-gradient(135deg, rgba(10, 10, 10, 0.95) 0%, rgba(20, 20, 30, 0.95) 100%)',
         position: 'relative'
