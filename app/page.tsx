@@ -533,7 +533,7 @@ export default function SunsetHavenResort() {
                         alt={`Sunset Haven Resort ${index + 1}`}
                         fill
                         className="object-cover"
-                        priority={index === 0}
+                        priority
                         loading="eager"
                         sizes="(max-width: 768px) 100vw, 50vw"
                       />
