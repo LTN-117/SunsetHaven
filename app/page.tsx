@@ -141,7 +141,7 @@ export default function SunsetHavenResort() {
     }, 5000)
 
     return () => clearInterval(heroInterval)
-  }, [])
+  }, [heroImages.length])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -534,6 +534,7 @@ export default function SunsetHavenResort() {
                         fill
                         className="object-cover"
                         priority={index === 0}
+                        loading="eager"
                         sizes="(max-width: 768px) 100vw, 50vw"
                       />
                     </div>
