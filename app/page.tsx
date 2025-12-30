@@ -443,7 +443,7 @@ export default function SunsetHavenResort() {
                 alt="Sunset Haven Logo"
                 width={48}
                 height={48}
-                className="rounded-lg"
+                className="animate-wave rounded-lg"
               />
               <span className="font-bold text-xl">Sunset Haven</span>
             </div>
