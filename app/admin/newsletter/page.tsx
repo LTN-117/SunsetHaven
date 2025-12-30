@@ -162,7 +162,7 @@ export default function NewsletterPage() {
           <Button
             onClick={copyAllEmails}
             variant="outline"
-            className="border-gray-700 text-white hover:bg-gray-800"
+            className="border-gray-700 text-black hover:bg-gray-800"
             disabled={signups.length === 0}
           >
             <Mail className="h-4 w-4 mr-2" />
