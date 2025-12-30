@@ -511,7 +511,7 @@ export default function SunsetHavenResort() {
                 onClick={() => {
                   document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
                 }}
-                className="text-white px-10 py-4 text-xl rounded-full hover:opacity-90 hover:scale-105 transition-all duration-300"
+                className="animate-wave text-white px-10 py-4 text-xl rounded-full hover:opacity-90 hover:scale-105 transition-all duration-300"
                 style={{ background: 'linear-gradient(135deg, #FF3F02 0%, #FEBE03 100%)' }}
               >
                 Book Your Experience - Get Quote
@@ -621,7 +621,7 @@ export default function SunsetHavenResort() {
                   />
                   <Button
                     type="submit"
-                    className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-white hover:opacity-90 px-8"
+                    className="animate-wave bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-white hover:opacity-90 px-8"
                     disabled={isSubmittingNewsletter}
                   >
                     {isSubmittingNewsletter ? (
@@ -980,7 +980,7 @@ export default function SunsetHavenResort() {
                     <div>
                       <Button
                         onClick={() => handleLearnMore(experience.title)}
-                        className="bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-white hover:opacity-90"
+                        className="animate-wave bg-gradient-to-r from-[#FF3F02] to-[#FEBE03] text-white hover:opacity-90"
                       >
                         Learn More
                       </Button>
@@ -1366,7 +1366,7 @@ export default function SunsetHavenResort() {
 
                 <Button
                   type="submit"
-                  className="w-full text-white rounded-full font-semibold hover:opacity-90"
+                  className="animate-wave w-full text-white rounded-full font-semibold hover:opacity-90"
                   style={{ background: 'linear-gradient(135deg, #FF3F02 0%, #FEBE03 100%)' }}
                   disabled={isSubmitting}
                 >
