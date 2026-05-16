@@ -39,6 +39,7 @@ export default function SunsetHavenResort() {
   const [testimonialSlide, setTestimonialSlide] = useState(0)
 
   const [formData, setFormData] = useState({ name: "", phone: "", inquiry_type: "", message: "" })
+  const [phoneError, setPhoneError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle")
 
@@ -158,6 +159,10 @@ export default function SunsetHavenResort() {
     e.preventDefault()
     if (!formData.name || !formData.phone || !formData.inquiry_type || !formData.message) {
       setSubmitStatus("error"); setTimeout(() => setSubmitStatus("idle"), 3000); return
+    }
+    const digits = formData.phone.replace(/\D/g, '')
+    if (digits.length < 7 || digits.length > 15) {
+      setPhoneError("Please enter a valid phone number"); setTimeout(() => setPhoneError(""), 4000); return
     }
     setIsSubmitting(true); setSubmitStatus("idle")
     try {
@@ -761,10 +766,15 @@ export default function SunsetHavenResort() {
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: BRAND.body }}>Phone</label>
                 <Input type="tel" placeholder="Your phone number" value={formData.phone}
-                  onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={e => {
+                    const val = e.target.value.replace(/[^0-9+\s\-()]/g, '')
+                    setFormData({ ...formData, phone: val })
+                    setPhoneError("")
+                  }}
                   className="text-white placeholder:text-[#6b6560] border-0"
-                  style={{ background: 'rgba(255,255,255,0.06)' }}
+                  style={{ background: 'rgba(255,255,255,0.06)', borderColor: phoneError ? 'rgba(255,63,2,0.5)' : undefined }}
                   disabled={isSubmitting} required />
+                {phoneError && <p className="text-xs mt-1" style={{ color: '#FF3F02' }}>{phoneError}</p>}
               </div>
             </div>
             <div>
