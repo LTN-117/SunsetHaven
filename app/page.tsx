@@ -161,8 +161,12 @@ export default function SunsetHavenResort() {
     }
     setIsSubmitting(true); setSubmitStatus("idle")
     try {
-      const { error } = await supabase.from("inquiries").insert([{ ...formData, status: "new" }])
-      if (error) throw error
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+      if (!res.ok) throw new Error('failed')
       setFormData({ name: "", phone: "", inquiry_type: "", message: "" })
       setSubmitStatus("success"); setTimeout(() => setSubmitStatus("idle"), 5000)
     } catch {
@@ -179,8 +183,14 @@ export default function SunsetHavenResort() {
     }
     setIsSubmittingNewsletter(true)
     try {
-      const { error } = await supabase.from("event_newsletter_signups").insert([{ email: newsletterEmail }])
-      if (error) { if (error.code === '23505') { setNewsletterStatus("error"); return } throw error }
+      const res = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newsletterEmail }),
+      })
+      const data = await res.json()
+      if (data.error === 'already_subscribed') { setNewsletterStatus("error"); return }
+      if (!res.ok) throw new Error('failed')
       setNewsletterEmail(""); setNewsletterStatus("success"); setTimeout(() => setNewsletterStatus("idle"), 5000)
     } catch {
       setNewsletterStatus("error"); setTimeout(() => setNewsletterStatus("idle"), 5000)
