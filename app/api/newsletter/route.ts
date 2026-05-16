@@ -24,8 +24,11 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Failed to subscribe' }, { status: 500 })
   }
 
+  const now = new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos', dateStyle: 'medium', timeStyle: 'short' })
+
   await sendTelegramMessage(
-    `📧 <b>New Newsletter Signup</b>\n\n` +
+    `📧 <b>New Newsletter Signup</b>\n` +
+    `🕐 <i>${now} (WAT)</i>\n\n` +
     `✉️ ${email}\n\n` +
     `<a href="https://www.sunsethaven.com.ng/admin/newsletter">View Subscribers →</a>`
   )

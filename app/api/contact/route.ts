@@ -22,8 +22,11 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Failed to submit inquiry' }, { status: 500 })
   }
 
+  const now = new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos', dateStyle: 'medium', timeStyle: 'short' })
+
   await sendTelegramMessage(
-    `🏝️ <b>New Inquiry — Sunset Haven</b>\n\n` +
+    `🏝️ <b>New Inquiry — Sunset Haven</b>\n` +
+    `🕐 <i>${now} (WAT)</i>\n\n` +
     `👤 <b>Name:</b> ${name}\n` +
     `📱 <b>Phone:</b> ${phone}\n` +
     `📋 <b>Type:</b> ${inquiry_type}\n` +
