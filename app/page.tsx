@@ -51,7 +51,7 @@ export default function SunsetHavenResort() {
   const [events, setEvents] = useState<any[]>([])
   const [eventSlide, setEventSlide] = useState(0)
   const [newsletterEmail, setNewsletterEmail] = useState("")
-  const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "success" | "error">("idle")
+  const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "success" | "error" | "duplicate">("idle")
   const [isSubmittingNewsletter, setIsSubmittingNewsletter] = useState(false)
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
   const [aboutWordsVisible, setAboutWordsVisible] = useState(0)
@@ -189,7 +189,7 @@ export default function SunsetHavenResort() {
         body: JSON.stringify({ email: newsletterEmail }),
       })
       const data = await res.json()
-      if (data.error === 'already_subscribed') { setNewsletterStatus("error"); return }
+      if (data.error === 'already_subscribed') { setNewsletterStatus("duplicate"); return }
       if (!res.ok) throw new Error('failed')
       setNewsletterEmail(""); setNewsletterStatus("success"); setTimeout(() => setNewsletterStatus("idle"), 5000)
     } catch {
@@ -412,6 +412,7 @@ export default function SunsetHavenResort() {
                 </Button>
               </form>
               {newsletterStatus === 'success' && <p className="text-sm w-full sm:w-auto" style={{ color: BRAND.amber }}>You're in! We'll let you know.</p>}
+              {newsletterStatus === 'duplicate' && <p className="text-sm w-full sm:w-auto" style={{ color: BRAND.amber }}>That email is already on our list.</p>}
               {newsletterStatus === 'error' && <p className="text-sm w-full sm:w-auto text-red-400">Check your email and try again.</p>}
             </div>
           ) : (
