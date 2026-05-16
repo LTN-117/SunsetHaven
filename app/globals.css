@@ -4,25 +4,25 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated to bright modern palette with lime green and orange-red */
-  --background: oklch(0.98 0.01 85); /* White */
-  --foreground: oklch(0.2 0.02 0); /* Dark text */
-  --card: oklch(0.96 0.01 85); /* Light gray */
-  --card-foreground: oklch(0.2 0.02 0);
-  --popover: oklch(0.96 0.01 85);
-  --popover-foreground: oklch(0.2 0.02 0);
-  --primary: oklch(0.85 0.25 110); /* Bright lime green #FEBE03 */
-  --primary-foreground: oklch(0.2 0.02 0);
-  --secondary: oklch(0.55 0.22 20); /* Bright orange-red #FF3F02 */
-  --secondary-foreground: oklch(0.98 0.01 85);
-  --muted: oklch(0.92 0.02 200); /* Light blue */
-  --muted-foreground: oklch(0.2 0.02 0);
-  --accent: oklch(0.55 0.22 20); /* Orange-red accent */
-  --accent-foreground: oklch(0.98 0.01 85);
+  /* Golden Hour dark palette — warmer black, brand amber accents */
+  --background: oklch(0.10 0.02 55); /* Warm dark #12100e */
+  --foreground: oklch(0.88 0.02 70); /* Warm white #d6d0c8 */
+  --card: oklch(0.13 0.02 55);
+  --card-foreground: oklch(0.88 0.02 70);
+  --popover: oklch(0.13 0.02 55);
+  --popover-foreground: oklch(0.88 0.02 70);
+  --primary: oklch(0.85 0.25 110); /* Brand amber #FEBE03 */
+  --primary-foreground: oklch(0.12 0.02 85);
+  --secondary: oklch(0.55 0.22 20); /* Brand orange-red #FF3F02 */
+  --secondary-foreground: oklch(0.95 0.01 85);
+  --muted: oklch(0.22 0.02 85);
+  --muted-foreground: oklch(0.65 0.03 85);
+  --accent: oklch(0.55 0.22 20);
+  --accent-foreground: oklch(0.95 0.01 85);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.88 0.02 85);
-  --input: oklch(0.88 0.02 85);
+  --border: oklch(0.25 0.02 85);
+  --input: oklch(0.22 0.02 85);
   --ring: oklch(0.85 0.25 110);
   --chart-1: oklch(0.85 0.25 110);
   --chart-2: oklch(0.55 0.22 20);
@@ -76,7 +76,7 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-poppins);
   --font-mono: var(--font-geist-mono);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -150,6 +150,7 @@
 
   html {
     scroll-behavior: smooth;
+    scroll-padding-top: 80px;
   }
 
   .text-balance {
@@ -162,11 +163,95 @@
 
   /* Hide scrollbar for horizontal gallery */
   .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   .scrollbar-hide::-webkit-scrollbar {
-    display: none;  /* Chrome, Safari and Opera */
+    display: none;
   }
+}
+
+/* ── Scroll-reveal animations ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-40px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal-left.visible { opacity: 1; transform: translateX(0); }
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(40px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+.reveal-scale.visible { opacity: 1; transform: scale(1); }
+
+.stagger-1 { transition-delay: 0.08s; }
+.stagger-2 { transition-delay: 0.18s; }
+.stagger-3 { transition-delay: 0.28s; }
+.stagger-4 { transition-delay: 0.38s; }
+
+/* ── CTA button shimmer on hover ── */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  transition: left 0.45s ease;
+}
+.btn-shimmer:hover::after { left: 100%; }
+
+/* ── Floating ambient orbs ── */
+@keyframes float-orb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(18px, -28px) scale(1.04); }
+  66% { transform: translate(-14px, 18px) scale(0.97); }
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  animation: float-orb 14s ease-in-out infinite;
+}
+.orb-amber {
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(254,190,3,0.16) 0%, transparent 70%);
+}
+.orb-fire {
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(255,63,2,0.13) 0%, transparent 70%);
+  animation-delay: -7s;
+}
+
+/* Subtle warm grain texture for dark sections */
+.grain-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  opacity: 0.03;
+  pointer-events: none;
 }
