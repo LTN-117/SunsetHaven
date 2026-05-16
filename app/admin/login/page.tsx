@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -93,6 +94,8 @@ export default function LoginPage() {
         }}>
           {/* Logo/Header */}
           <div className="text-center mb-8">
+            <Image src="/sunset-haven-logo.png" alt="Sunset Haven" width={56} height={56}
+              className="rounded-xl mx-auto mb-4" />
             <h1 className="text-3xl font-bold text-white mb-2">Sunset Haven</h1>
             <p className="text-gray-400">Admin Portal</p>
           </div>
