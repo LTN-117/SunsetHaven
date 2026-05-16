@@ -72,7 +72,7 @@ export default function InquiriesPage() {
 
   function filterInquiries() {
     if (statusFilter === "all") {
-      setFilteredInquiries(inquiries)
+      setFilteredInquiries(inquiries.filter(inq => inq.status !== 'archived'))
     } else {
       setFilteredInquiries(inquiries.filter(inq => inq.status === statusFilter))
     }
