@@ -118,11 +118,11 @@ Sunset Haven Resort is a premium eco-tourism destination website for Tarkwa Bay 
 - [x] Gradient background (orange to yellow)
 - [x] Background image overlay (IMG_8277.JPG)
 - [x] Contact information:
-  - Email: tarkwabaylifestyle@gmail.com
-  - Phone: +234 806 935 9028
+  - Email: admin@sunset-haven.com
+  - Phone: +234 800 000 0000
   - Address: Tarkwa Bay Island, Lagos
   - Additional: 15 minutes by boat from Lagos
-- [x] Instagram link: @sunset.haven__
+- [x] Instagram link: @sunset-haven-resort
 - [x] Information badges:
   - Year-round availability
   - Boat transport available
@@ -855,9 +855,9 @@ NEXT_PUBLIC_POSTHOG_KEY=phc_xxxxx (optional)
 ### Project Owner
 - **Business:** Sunset Haven Resort
 - **Location:** Tarkwa Bay Island, Lagos
-- **Email:** tarkwabaylifestyle@gmail.com
-- **Phone:** +234 806 935 9028
-- **Instagram:** @sunset.haven__
+- **Email:** admin@sunset-haven.com
+- **Phone:** +234 800 000 0000
+- **Instagram:** @sunset-haven-resort
 
 ### Developer Notes
 This project was built with Claude Code. For technical questions or issues:

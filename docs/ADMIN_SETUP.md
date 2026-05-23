@@ -38,7 +38,7 @@ Your admin backoffice is now built and ready to use! This guide will help you se
 
 1. In your Supabase project, go to **SQL Editor** (left sidebar)
 2. Click "New Query"
-3. Open the file `/Users/olamide/Desktop/Vibe coding/sunset-haven-resort/supabase-schema.sql`
+3. Open the file `~/sunset-haven-resort/supabase-schema.sql`
 4. Copy ALL the SQL code
 5. Paste it into the Supabase SQL Editor
 6. Click "Run" at the bottom right
@@ -77,7 +77,7 @@ NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
 
 1. Start your development server (if not already running):
    ```bash
-   cd "/Users/olamide/Desktop/Vibe coding/sunset-haven-resort"
+   cd "~/sunset-haven-resort"
    npm run dev
    ```
 

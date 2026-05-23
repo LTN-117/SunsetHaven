@@ -40,12 +40,12 @@ CREATE TABLE testimonials (
 -- Footer Settings Table (Single Row)
 CREATE TABLE footer_settings (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  email TEXT DEFAULT 'tarkwabaylifestyle@gmail.com',
-  phone TEXT DEFAULT '+234 806 935 9028',
+  email TEXT DEFAULT 'admin@sunset-haven.com',
+  phone TEXT DEFAULT '+234 800 000 0000',
   address TEXT DEFAULT 'Tarkwa Bay Island, Lagos',
   additional_info TEXT DEFAULT '15 minutes by boat from Lagos',
-  instagram_handle TEXT DEFAULT '@sunset.haven__',
-  instagram_url TEXT DEFAULT 'https://instagram.com/sunset.haven__',
+  instagram_handle TEXT DEFAULT '@sunset-haven-resort',
+  instagram_url TEXT DEFAULT 'https://instagram.com/sunset-haven-resort',
   availability_text TEXT DEFAULT 'Year-round availability',
   transport_text TEXT DEFAULT 'Boat transport available',
   copyright_text TEXT DEFAULT '© 2025 by Sunset Haven. Powered and secured by Vercel.',

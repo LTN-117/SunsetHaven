@@ -26,7 +26,7 @@ Before you start, make sure you have:
 
 ### 1.1 Check Project Files
 ```bash
-cd "/Users/olamide/Desktop/Vibe coding/sunset-haven-resort"
+cd "~/sunset-haven-resort"
 ls
 ```
 
@@ -94,7 +94,7 @@ Open: http://localhost:3000/admin
 2. Click "New Query"
 3. Open file on your computer:
    ```
-   /Users/olamide/Desktop/Vibe coding/sunset-haven-resort/supabase-schema.sql
+   ~/sunset-haven-resort/supabase-schema.sql
    ```
 4. Copy ALL the SQL (Cmd+A, Cmd+C)
 5. Paste into Supabase SQL Editor
@@ -132,7 +132,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 3.1 Open .env.local
 ```bash
-cd "/Users/olamide/Desktop/Vibe coding/sunset-haven-resort"
+cd "~/sunset-haven-resort"
 open .env.local
 ```
 
@@ -334,7 +334,7 @@ The contact form currently just shows an alert. Let's connect it to save to Supa
 
 ### 7.1 Open Homepage File
 ```bash
-cd "/Users/olamide/Desktop/Vibe coding/sunset-haven-resort"
+cd "~/sunset-haven-resort"
 code app/page.tsx
 ```
 
@@ -597,9 +597,9 @@ git pull origin main
 ## Support Contacts
 
 ### Business
-- **Email:** tarkwabaylifestyle@gmail.com
-- **Phone:** +234 806 935 9028
-- **Instagram:** @sunset.haven__
+- **Email:** admin@sunset-haven.com
+- **Phone:** +234 800 000 0000
+- **Instagram:** @sunset-haven-resort
 
 ### Technical Issues
 1. Check PROJECT_STATUS/README.md

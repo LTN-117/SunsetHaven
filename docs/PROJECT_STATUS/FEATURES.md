@@ -238,14 +238,14 @@
 Three-column grid (responsive: stacks on mobile)
 
 **Column 1: Contact Information**
-- Email: tarkwabaylifestyle@gmail.com
-- Phone: +234 806 935 9028
+- Email: admin@sunset-haven.com
+- Phone: +234 800 000 0000
 - Address: Tarkwa Bay Island, Lagos
 - Additional: 15 minutes by boat from Lagos
 
 **Column 2: Follow Us**
-- Instagram handle: @sunset.haven__
-- Instagram link: https://instagram.com/sunset.haven__
+- Instagram handle: @sunset-haven-resort
+- Instagram link: https://instagram.com/sunset-haven-resort
 - Icon: Instagram (lucide-react)
 
 **Column 3: Information**
