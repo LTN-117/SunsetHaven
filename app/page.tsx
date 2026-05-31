@@ -582,7 +582,7 @@ export default function SunsetHavenResort() {
                 loading="lazy" sizes="(max-width: 768px) 100vw, 50vw" />
               {/* Default overlay */}
               <div className="absolute inset-0 transition-all duration-500"
-                style={{ background: 'linear-gradient(to top, rgba(12,10,8,0.85) 0%, rgba(12,10,8,0.05) 55%)' }} />
+                style={{ background: 'linear-gradient(to top, rgba(12,10,8,0.92) 0%, rgba(12,10,8,0.55) 30%, rgba(12,10,8,0.05) 60%)' }} />
               {/* Hover overlay */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                 style={{ background: 'rgba(12,10,8,0.6)' }} />
