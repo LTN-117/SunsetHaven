@@ -774,7 +774,9 @@ export default function SunsetHavenResort() {
                   className="text-white placeholder:text-[#6b6560] border-0"
                   style={{ background: 'rgba(255,255,255,0.06)', borderColor: phoneError ? 'rgba(255,63,2,0.5)' : undefined }}
                   disabled={isSubmitting} required />
-                {phoneError && <p className="text-xs mt-1" style={{ color: '#FF3F02' }}>{phoneError}</p>}
+                {phoneError
+                  ? <p className="text-xs mt-1" style={{ color: '#FF3F02' }}>{phoneError}</p>
+                  : <p className="text-xs mt-1" style={{ color: BRAND.body }}>Please use a WhatsApp number so we can reach you.</p>}
               </div>
             </div>
             <div>
