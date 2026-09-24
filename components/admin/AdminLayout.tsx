@@ -11,6 +11,8 @@ import {
   Images,
   MessageSquare,
   Settings,
+  CircleHelp,
+  Tickets,
   Calendar,
   Mail,
   LogOut,
@@ -35,6 +37,8 @@ const navigation = [
   { name: "Newsletter", href: "/admin/newsletter", icon: Mail },
   { name: "Testimonials", href: "/admin/testimonials", icon: MessageSquare },
   { name: "Footer", href: "/admin/footer", icon: Settings },
+  { name: "Pricing", href: "/admin/pricing", icon: Tickets },
+  { name: "How-to Guide", href: "/admin/guide", icon: CircleHelp },
 ]
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
@@ -53,23 +57,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   useEffect(() => {
     if (!mounted) return
 
-    const isLoggedIn = localStorage.getItem("isAdminLoggedIn")
-    if (isLoggedIn !== "true") {
-      router.push("/admin/login")
-      return
-    }
-
-    setAdminEmail(localStorage.getItem("adminEmail") || "admin@sunsethaven.com")
-    setIsChecking(false)
-
-    supabase
-      .from("inquiries")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "new")
-      .then(({ count }) => setNewInquiries(count || 0))
+    fetch('/api/admin/session').then(response => response.json()).then(session => {
+      if (!session.authenticated) {
+        router.push('/admin/login')
+        return
+      }
+      localStorage.setItem('isAdminLoggedIn', 'true')
+      localStorage.setItem('adminEmail', session.email)
+      setAdminEmail(session.email)
+      setIsChecking(false)
+      supabase.from('inquiries').select('*', { count: 'exact', head: true }).eq('status', 'new')
+        .then(({ count }) => setNewInquiries(count || 0))
+    }).catch(() => router.push('/admin/login'))
   }, [mounted, router])
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await fetch('/api/admin/session', { method: 'DELETE' })
     localStorage.removeItem("isAdminLoggedIn")
     localStorage.removeItem("adminEmail")
     toast.success("Logged out successfully")

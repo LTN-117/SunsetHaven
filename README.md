@@ -1,5 +1,13 @@
 # Sunset Haven Resort
 
+## Pricing and site manager guide
+
+- The public pricing section is at `/#pricing`.
+- An authorized manager can edit prices at `/admin/pricing` and open the visual, phone-friendly guide at `/admin/guide`.
+- Pricing is stored in the `site_pricing` table. Apply `sql-scripts/SITE_PRICING.sql` once before saving prices.
+- Admin login now uses a signed server cookie. Set `ADMIN_LOGIN_EMAIL`, `ADMIN_LOGIN_PASSWORD`, and a random `ADMIN_SESSION_SECRET` of at least 32 characters in the deployment environment. Keep these values out of Git. The supplied administrator password should be rotated before sharing access more widely.
+- For local installation, use `npm ci --legacy-peer-deps` because the current `vaul` release has a React 18 peer requirement while this project uses React 19.
+
 A luxury resort website with comprehensive admin backoffice for managing content, events, inquiries, and more.
 
 ## Features
@@ -16,7 +24,7 @@ A luxury resort website with comprehensive admin backoffice for managing content
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS v4
 - **UI Components**: shadcn/ui

@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { supabase } from "@/lib/supabase"
+import PricingSection from '@/components/PricingSection'
+import { defaultPricing, type Pricing } from '@/lib/pricing'
 
 const ABOUT_PARAS = [
   "How It All Started",
@@ -50,6 +52,7 @@ export default function SunsetHavenResort() {
   const [heroImages, setHeroImages] = useState<string[]>(["/IMG_8277.JPG", "/IMG_8282.JPG", "/IMG_8285.JPG"])
   const [galleryImages, setGalleryImages] = useState<any[]>([])
   const [events, setEvents] = useState<any[]>([])
+  const [pricing, setPricing] = useState<Pricing>(defaultPricing)
   const [eventSlide, setEventSlide] = useState(0)
   const [newsletterEmail, setNewsletterEmail] = useState("")
   const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "success" | "error" | "duplicate">("idle")
@@ -92,6 +95,10 @@ export default function SunsetHavenResort() {
     const today = new Date().toISOString().split('T')[0]
     supabase.from('events').select('*').eq('is_active', true).gte('event_date', today).order('event_date', { ascending: true }).limit(5)
       .then(({ data }) => setEvents(data || []))
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/pricing').then(response => response.json()).then(result => { if (result.pricing) setPricing(result.pricing) }).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -288,7 +295,7 @@ export default function SunsetHavenResort() {
               <span className="font-bold text-white text-lg">Sunset Haven</span>
             </a>
             <div className="hidden md:flex items-center gap-8">
-              {['Experiences', 'About', 'Contact'].map(label => (
+              {['Experiences', 'Pricing', 'About', 'Contact'].map(label => (
                 <a key={label} href={`#${label.toLowerCase()}`}
                   className="text-sm transition-colors"
                   style={{ color: BRAND.body }}
@@ -312,7 +319,7 @@ export default function SunsetHavenResort() {
         {isMenuOpen && (
           <div className="md:hidden" style={{ background: 'rgba(10,8,6,0.90)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: `1px solid rgba(254,190,3,0.1)` }}>
             <div className="px-6 py-8 flex flex-col gap-6">
-              {['Experiences', 'About', 'Contact'].map(label => (
+              {['Experiences', 'Pricing', 'About', 'Contact'].map(label => (
                 <a key={label} href={`#${label.toLowerCase()}`}
                   onClick={() => setIsMenuOpen(false)}
                   className="text-lg py-3 block transition-colors"
@@ -606,6 +613,8 @@ export default function SunsetHavenResort() {
           ))}
         </div>
       </section>
+
+      <PricingSection pricing={pricing} onBook={scrollToContact} />
 
       {/* ── GALLERY ── */}
       <section className="py-24 relative overflow-hidden" style={{ background: BRAND.dark2 }}>

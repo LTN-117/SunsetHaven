@@ -7,10 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
-import { signIn, isAuthenticated } from "@/lib/auth"
 import { Toaster } from "sonner"
 import { Eye, EyeOff } from "lucide-react"
-import { supabase } from "@/lib/supabase"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -36,37 +34,36 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Hardcoded credentials for single admin user
-    const ADMIN_EMAIL = 'admin@sunsethaven.com'
-    const ADMIN_PASSWORD = 'SunsetHaven2024!@@'
-
     if (!email || !password) {
       toast.error('Please enter both email and password')
-      return
-    }
-
-    // Simple credential check
-    if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
-      toast.error('Invalid email or password')
       return
     }
 
     setLoading(true)
 
     try {
-      // Set a simple session flag in localStorage
+      const response = await fetch('/api/admin/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      if (!response.ok) {
+        const result = await response.json()
+        throw new Error(result.error || 'Login failed')
+      }
       localStorage.setItem('isAdminLoggedIn', 'true')
-      localStorage.setItem('adminEmail', ADMIN_EMAIL)
+      localStorage.setItem('adminEmail', email)
 
       toast.success('Welcome back!')
 
       // Redirect to admin dashboard
       setTimeout(() => {
-        router.push('/admin')
+        const redirect = searchParams.get('redirect')
+        router.push(redirect?.startsWith('/admin') && !redirect.startsWith('//') ? redirect : '/admin')
       }, 500)
     } catch (error: any) {
       console.error('Login error:', error)
-      toast.error('Login failed')
+      toast.error(error instanceof Error ? error.message : 'Login failed')
       setLoading(false)
     }
   }
