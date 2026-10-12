@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import AdminLayout from "@/components/admin/AdminLayout"
-import { supabase } from "@/lib/supabase" // Keep for storage uploads only
+import { supabase } from "@/lib/supabase" // Keep for signed storage uploads only
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -50,6 +50,31 @@ interface GalleryImage {
   created_at: string
 }
 
+interface SignedUploadResponse {
+  path?: string
+  token?: string
+  publicUrl?: string
+  error?: string
+}
+
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024
+const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']
+const IMAGE_INPUT_ACCEPT = SUPPORTED_IMAGE_TYPES.join(',')
+
+function errorMessageFromPayload(payload: unknown, fallback: string) {
+  if (payload && typeof payload === 'object' && 'error' in payload) {
+    const { error } = payload as { error?: unknown }
+    if (typeof error === 'string' && error.trim()) return error
+  }
+
+  return fallback
+}
+
+async function errorMessageFromResponse(response: Response, fallback: string) {
+  const payload = await response.json().catch(() => null)
+  return errorMessageFromPayload(payload, fallback)
+}
+
 export default function GalleryPage() {
   const [images, setImages] = useState<GalleryImage[]>([])
   const [filteredImages, setFilteredImages] = useState<GalleryImage[]>([])
@@ -77,6 +102,12 @@ export default function GalleryPage() {
   useEffect(() => {
     filterImages()
   }, [images, categoryFilter])
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl.startsWith('blob:')) URL.revokeObjectURL(previewUrl)
+    }
+  }, [previewUrl])
 
   async function loadImages() {
     try {
@@ -106,18 +137,30 @@ export default function GalleryPage() {
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      setUploadedFile(file)
+    if (!file) return
 
-      // Create preview URL
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const result = reader.result as string
-        setPreviewUrl(result)
-        setNewImage({ ...newImage, image_url: result })
-      }
-      reader.readAsDataURL(file)
+    if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+      toast.error('Only JPEG, PNG, WebP, GIF, and AVIF images are supported.')
+      e.target.value = ''
+      return
     }
+
+    if (file.size === 0) {
+      toast.error('The selected image is empty.')
+      e.target.value = ''
+      return
+    }
+
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      toast.error('Image files must be 10 MB or smaller.')
+      e.target.value = ''
+      return
+    }
+
+    setUploadedFile(file)
+    setPreviewUrl(URL.createObjectURL(file))
+    // Keep previews out of the persisted image URL; successful uploads use the public Storage URL.
+    setNewImage(current => ({ ...current, image_url: '' }))
   }
 
   async function addImage() {
@@ -130,17 +173,31 @@ export default function GalleryPage() {
     try {
       let imageUrl = newImage.image_url
 
-      // If user uploaded a file, upload it to Supabase Storage
+      // If a user selected a file, have the protected route mint a one-time upload token.
       if (uploadedFile) {
-        const fileExt = uploadedFile.name.split('.').pop()
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-        const filePath = `${fileName}`
+        const uploadTokenResponse = await fetch('/api/admin/gallery/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: uploadedFile.name,
+            contentType: uploadedFile.type,
+            size: uploadedFile.size,
+          }),
+        })
+        const signedUpload = await uploadTokenResponse.json().catch(() => null) as SignedUploadResponse | null
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        if (!uploadTokenResponse.ok) {
+          throw new Error(errorMessageFromPayload(signedUpload, 'Failed to prepare image upload.'))
+        }
+        if (!signedUpload?.path || !signedUpload.token || !signedUpload.publicUrl) {
+          throw new Error('The image upload service returned an invalid upload token.')
+        }
+
+        const { error: uploadError } = await supabase.storage
           .from('gallery-images')
-          .upload(filePath, uploadedFile, {
+          .uploadToSignedUrl(signedUpload.path, signedUpload.token, uploadedFile, {
             cacheControl: '3600',
-            upsert: false
+            contentType: uploadedFile.type,
           })
 
         if (uploadError) {
@@ -148,12 +205,7 @@ export default function GalleryPage() {
           throw new Error(`Failed to upload image: ${uploadError.message}`)
         }
 
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('gallery-images')
-          .getPublicUrl(filePath)
-
-        imageUrl = publicUrl
+        imageUrl = signedUpload.publicUrl
       }
 
       // If tagging with a "What We've Built" tag, auto-reassign the existing tagged image
@@ -163,11 +215,14 @@ export default function GalleryPage() {
         const existingTaggedImage = images.find(img => img.tag === newImage.tag)
         if (existingTaggedImage) {
           // Auto-reassign to gallery
-          await fetch('/api/admin/gallery', {
+          const reassignmentResponse = await fetch('/api/admin/gallery', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: existingTaggedImage.id, tag: null, show_in_gallery: true, show_in_hero: false })
           })
+          if (!reassignmentResponse.ok) {
+            throw new Error(await errorMessageFromResponse(reassignmentResponse, 'Failed to reassign the previous tagged image.'))
+          }
           toast.info(`Previous "${newImage.tag}" image reassigned to gallery`)
         }
       }
@@ -191,7 +246,9 @@ export default function GalleryPage() {
         })
       })
 
-      if (!response.ok) throw new Error('Failed to add image')
+      if (!response.ok) {
+        throw new Error(await errorMessageFromResponse(response, 'Failed to add image'))
+      }
 
       // Reload all images to reflect changes
       await loadImages()
@@ -455,11 +512,11 @@ export default function GalleryPage() {
                 <Input
                   id="file_upload"
                   type="file"
-                  accept="image/*"
+                  accept={IMAGE_INPUT_ACCEPT}
                   onChange={handleFileChange}
                   className="bg-gray-800 border-gray-700 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-[#FF3F02] file:to-[#FEBE03] file:text-white hover:file:opacity-90 cursor-pointer"
                 />
-                <p className="text-xs text-gray-500">Or enter a URL below</p>
+                <p className="text-xs text-gray-500">JPEG, PNG, WebP, GIF, or AVIF up to 10 MB. Or enter a URL below.</p>
               </div>
 
               <div className="space-y-2">
@@ -542,12 +599,12 @@ export default function GalleryPage() {
                 </div>
               </div>
 
-              {newImage.image_url && (
+              {(previewUrl || newImage.image_url) && (
                 <div className="space-y-2">
                   <Label className="text-gray-300">Preview</Label>
                   <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-800">
                     <Image
-                      src={newImage.image_url}
+                      src={previewUrl || newImage.image_url}
                       alt="Preview"
                       fill
                       className="object-cover"
