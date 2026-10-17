@@ -3,7 +3,7 @@ import { formatNaira, type Pricing } from '@/lib/pricing'
 
 export default function PricingSection({ pricing, onBook }: { pricing: Pricing; onBook: () => void }) {
   return (
-    <section id="pricing" className="relative overflow-hidden py-20 sm:py-28" style={{ background: '#17110c' }}>
+    <section id="pricing" className="sh-pricing sh-paper relative overflow-hidden py-20 sm:py-28" style={{ background: '#17110c' }}>
       <div className="pointer-events-none absolute -right-36 top-0 h-96 w-96 rounded-full bg-[#ff3f02]/10 blur-3xl" />
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
@@ -15,8 +15,8 @@ export default function PricingSection({ pricing, onBook }: { pricing: Pricing; 
           <button onClick={onBook} className="inline-flex min-h-12 items-center justify-center gap-2 self-start rounded-full bg-[#FEBE03] px-6 font-bold text-[#211407] transition hover:bg-white">Ask about a booking <ArrowUpRight size={17} /></button>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
-          <div className="relative overflow-hidden rounded-[2rem] bg-[#FEBE03] p-7 text-[#211407] sm:p-9">
+        <div className="sh-pricing-main grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
+          <div className="sh-access relative overflow-hidden rounded-[2rem] bg-[#FEBE03] p-7 text-[#211407] sm:p-9">
             <Ticket className="mb-12 h-9 w-9" strokeWidth={1.5} />
             <p className="text-sm font-bold uppercase tracking-[0.18em]">General access</p>
             <div className="mt-2 text-5xl font-black tracking-tight sm:text-6xl">{formatNaira(pricing.access.price)}</div>

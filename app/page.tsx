@@ -10,13 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/lib/supabase"
 import PricingSection from '@/components/PricingSection'
 import { defaultPricing, type Pricing } from '@/lib/pricing'
+import './homepage-polish.css'
 
 const ABOUT_PARAS = [
   "How It All Started",
-  "Four years ago, we were running pop-up camping events on Tarkwa Bay — small gatherings for creatives who craved something beyond the usual weekend options.",
+  "Four years ago, we were running pop-up camping events on Tarkwa Bay, hosting small gatherings for creatives who craved something beyond the usual weekend options.",
   "What started as intimate parties quickly revealed something bigger: people were hungry for experiential tourism that connected them with nature, community, and purpose.",
-  "Our pop-ups kept selling out. People weren't just coming once — they were bringing friends, requesting longer stays, asking for workspace options. The demand outgrew our pop-up model.",
-  "Instead of chasing venues, we created our own dedicated space — somewhere purpose-built for the community we'd discovered. Off-grid operations powered entirely by renewable energy.",
+  "Our pop-ups kept selling out. People weren't just coming once. They were bringing friends, requesting longer stays, asking for workspace options. The demand outgrew our pop-up model.",
+  "Instead of chasing venues, we created our own dedicated space, purpose-built for the community we'd discovered. Off-grid operations powered entirely by renewable energy.",
 ]
 const ABOUT_WORDS = ABOUT_PARAS.map(p => p.split(' '))
 const ABOUT_OFFSETS = ABOUT_WORDS.reduce<number[]>((acc, _, i) =>
@@ -268,19 +269,19 @@ export default function SunsetHavenResort() {
   }, [isMenuOpen])
 
   const SectionEyebrow = ({ label }: { label: string }) => (
-    <div className="reveal flex items-center gap-4 mb-10">
+    <div className="sh-eyebrow reveal flex items-center gap-4 mb-10">
       <span className="text-xs tracking-[0.25em] uppercase font-semibold" style={{ color: BRAND.amber }}>{label}</span>
       <div className="flex-1 h-px" style={{ background: `rgba(254,190,3,0.2)` }} />
     </div>
   )
 
   return (
-    <div style={{ background: BRAND.dark1, minHeight: '100vh' }}>
+    <div className="sunset-home" style={{ background: BRAND.dark1, minHeight: '100vh' }}>
 
       {/* ── NAV ── */}
       <nav
         ref={navRef}
-        className="fixed top-0 w-full z-50 transition-all duration-300"
+        className="sh-nav fixed top-0 w-full z-50 transition-all duration-300"
         style={{
           background: isScrolled ? 'rgba(10,8,6,0.72)' : 'transparent',
           backdropFilter: isScrolled ? 'blur(20px)' : 'none',
@@ -338,7 +339,7 @@ export default function SunsetHavenResort() {
       </nav>
 
       {/* ── HERO ── */}
-      <section className="relative w-full overflow-hidden" style={{ height: '100svh', minHeight: '600px' }}>
+      <section className="sh-hero relative w-full overflow-hidden" style={{ height: '100svh', minHeight: '600px' }}>
         {/* Full-bleed carousel */}
         <div className="absolute inset-0">
           <div className="flex h-full transition-transform duration-700 ease-in-out"
@@ -357,7 +358,7 @@ export default function SunsetHavenResort() {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 text-center">
+        <div className="sh-hero-content relative z-10 h-full flex flex-col items-center justify-center px-4 text-center">
           <p className="text-xs tracking-[0.35em] uppercase font-medium mb-6" style={{ color: BRAND.amber }}>
             Tarkwa Bay Island, Lagos
           </p>
@@ -393,7 +394,7 @@ export default function SunsetHavenResort() {
       </section>
 
       {/* ── EVENTS ── */}
-      <section className="py-24" style={{ background: BRAND.dark1 }}>
+      <section className="sh-events sh-paper py-24" style={{ background: BRAND.dark1 }}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <SectionEyebrow label="What's Happening" />
           <h2 className="reveal text-4xl md:text-5xl font-bold text-white mb-4 text-balance"
@@ -408,7 +409,7 @@ export default function SunsetHavenResort() {
             <div className="flex flex-col sm:flex-row gap-6 items-start p-6 md:p-8"
               style={{ borderLeft: `3px solid ${BRAND.amber}`, background: 'rgba(254,190,3,0.04)' }}>
               <div className="flex-1">
-                <p className="font-semibold text-white mb-1">Nothing booked yet — be the first to know.</p>
+                <p className="font-semibold text-white mb-1">Nothing booked yet. Be the first to know.</p>
                 <p className="text-sm" style={{ color: BRAND.muted }}>
                   Sign up and we'll drop you a line when our next event goes live.
                 </p>
@@ -496,9 +497,9 @@ export default function SunsetHavenResort() {
       </section>
 
       {/* ── ABOUT + STATS ── */}
-      <section id="about" ref={aboutRef as React.RefObject<HTMLDivElement>} className="py-24" style={{ background: BRAND.dark2 }}>
+      <section id="about" ref={aboutRef as React.RefObject<HTMLDivElement>} className="sh-about sh-paper py-24" style={{ background: BRAND.dark2 }}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          {/* Animated eyebrow — "How It All Started" word by word */}
+          {/* Animated eyebrow: "How It All Started" word by word */}
           <div className="flex items-center gap-4 mb-10">
             <span className="text-xs tracking-[0.25em] uppercase font-semibold" style={{ color: BRAND.amber }}>
               {ABOUT_WORDS[0].map((word, i) => (
@@ -576,7 +577,7 @@ export default function SunsetHavenResort() {
             Curated for You
           </h2>
           <p className="text-lg" style={{ color: BRAND.muted }}>
-            More than accommodation — experiences that blend community, adventure, and sustainability.
+            More than accommodation. Experiences that blend community, adventure, and sustainability.
           </p>
         </div>
 
@@ -617,7 +618,7 @@ export default function SunsetHavenResort() {
       <PricingSection pricing={pricing} onBook={scrollToContact} />
 
       {/* ── GALLERY ── */}
-      <section className="py-24 relative overflow-hidden" style={{ background: BRAND.dark2 }}>
+      <section className="sh-gallery py-24 relative overflow-hidden" style={{ background: BRAND.dark2 }}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8 mb-12">
           <SectionEyebrow label="The Island Life" />
           <h2 className="reveal text-4xl md:text-5xl font-bold text-white mb-4 text-balance"
@@ -667,7 +668,7 @@ export default function SunsetHavenResort() {
       </section>
 
       {/* ── INSTAGRAM ── */}
-      <section className="py-24 text-center" style={{ background: BRAND.dark1 }}>
+      <section className="sh-social py-24 text-center" style={{ background: BRAND.dark1 }}>
         <div className="max-w-2xl mx-auto px-6">
           <div className="flex justify-center mb-6">
             <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 24 24" style={{ color: BRAND.amber }}>
@@ -696,7 +697,7 @@ export default function SunsetHavenResort() {
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section className="py-24" style={{ background: BRAND.dark2 }}>
+      <section className="sh-testimonials py-24" style={{ background: BRAND.dark2 }}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <SectionEyebrow label="What Guests Say" />
           <h2 className="reveal text-4xl md:text-5xl font-bold text-white mb-16 text-balance"
@@ -704,7 +705,7 @@ export default function SunsetHavenResort() {
             Travelers Tell
           </h2>
 
-          {/* Cards — show 1 at a time on mobile, slide through */}
+          {/* Cards: show 1 at a time on mobile, slide through */}
           <div className="overflow-hidden">
             <div className="flex transition-transform duration-700 ease-in-out"
               style={{ transform: `translateX(-${testimonialSlide * 100}%)` }}>
@@ -751,7 +752,7 @@ export default function SunsetHavenResort() {
       </section>
 
       {/* ── CONTACT ── */}
-      <section id="contact" className="py-24" style={{ background: BRAND.dark1 }}>
+      <section id="contact" className="sh-contact sh-paper py-24" style={{ background: BRAND.dark1 }}>
         <div className="max-w-2xl mx-auto px-6 text-center">
           <SectionEyebrow label="Get In Touch" />
           <h2 className="reveal text-4xl md:text-5xl font-bold text-white mb-4 text-balance"
@@ -794,7 +795,7 @@ export default function SunsetHavenResort() {
                 <SelectTrigger className="text-white border-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
                   <SelectValue placeholder="Select an option" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="sunset-home sh-select-menu">
                   <SelectItem value="Premium Camping">Premium Camping</SelectItem>
                   <SelectItem value="Adventure Activities">Adventure Activities</SelectItem>
                   <SelectItem value="Curated Networking">Curated Networking</SelectItem>
@@ -830,7 +831,7 @@ export default function SunsetHavenResort() {
             </Button>
           </form>
 
-          {/* Contact info pills — click to copy */}
+          {/* Contact info pills: click to copy */}
           <div className="flex flex-wrap justify-center gap-3 mt-10">
             {[
               footerSettings?.email || 'tarkwabaylifestyle@gmail.com',
