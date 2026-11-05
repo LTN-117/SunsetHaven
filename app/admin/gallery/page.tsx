@@ -32,7 +32,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Trash2, Eye, EyeOff, GripVertical, Star, Loader2 } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Plus, Trash2, Eye, EyeOff, GripVertical, Star, Loader2, Menu } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
 
@@ -402,7 +409,7 @@ export default function GalleryPage() {
               {filteredImages.map((image) => (
                 <div
                   key={image.id}
-                  className="group relative rounded-xl overflow-hidden border border-gray-800 bg-gray-900"
+                  className="relative rounded-xl overflow-hidden border border-gray-800 bg-gray-900"
                 >
                   {/* Image */}
                   <div className="relative aspect-square">
@@ -413,35 +420,6 @@ export default function GalleryPage() {
                       className="object-cover"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     />
-
-                    {/* Overlay on hover */}
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => toggleHero(image.id, image.show_in_hero)}
-                        className={`${image.show_in_hero ? 'bg-yellow-500/30 hover:bg-yellow-500/40' : 'bg-white/20 hover:bg-white/30'} text-white`}
-                        title={image.show_in_hero ? "Remove from hero" : "Add to hero"}
-                      >
-                        <Star className={`h-4 w-4 ${image.show_in_hero ? 'fill-yellow-400 text-yellow-400' : ''}`} />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => toggleActive(image.id, image.is_active)}
-                        className="bg-white/20 hover:bg-white/30 text-white"
-                      >
-                        {image.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => confirmDelete(image.id)}
-                        className="bg-red-500/20 hover:bg-red-500/30 text-red-400"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
 
                     {/* Status Badges */}
                     <div className="absolute top-2 right-2 flex flex-col gap-1">
@@ -484,6 +462,45 @@ export default function GalleryPage() {
                         <span className="text-xs">{image.display_order}</span>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="px-3 pb-3">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="min-h-11 w-full border-gray-600 bg-gray-800 text-white hover:bg-gray-700 hover:text-white"
+                          aria-label={`Actions for ${image.caption || 'gallery image'}`}
+                        >
+                          <Menu className="h-4 w-4" aria-hidden="true" />
+                          Actions
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56 border-gray-700 bg-gray-900 text-white">
+                        <DropdownMenuItem
+                          onSelect={() => toggleHero(image.id, image.show_in_hero)}
+                          className="min-h-11 focus:bg-gray-800 focus:text-white"
+                        >
+                          <Star className={image.show_in_hero ? 'fill-yellow-400 text-yellow-400' : ''} aria-hidden="true" />
+                          {image.show_in_hero ? 'Remove from hero' : 'Add to hero'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={() => toggleActive(image.id, image.is_active)}
+                          className="min-h-11 focus:bg-gray-800 focus:text-white"
+                        >
+                          {image.is_active ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+                          {image.is_active ? 'Hide image' : 'Show image'}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-gray-700" />
+                        <DropdownMenuItem
+                          onSelect={() => confirmDelete(image.id)}
+                          className="min-h-11 text-red-400 focus:bg-red-500/10 focus:text-red-300 [&_svg]:text-red-400"
+                        >
+                          <Trash2 aria-hidden="true" />
+                          Delete image
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               ))}
